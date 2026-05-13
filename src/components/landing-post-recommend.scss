@@ -1,0 +1,656 @@
+@use '../styles/tokens' as *;
+
+$pr-purple: rgba(79, 70, 229, 0.95);
+$pr-purple-soft: rgba(129, 140, 248, 0.22);
+$pr-navy: rgba(30, 27, 75, 0.94);
+
+.pr {
+  color: $text;
+}
+
+.prBlock {
+  &--tight {
+    padding-top: 48px !important;
+    padding-bottom: 48px !important;
+  }
+
+  &--gray {
+    background: rgba(241, 245, 249, 0.98);
+  }
+
+  &--lavender {
+    background: linear-gradient(165deg, rgba(238, 242, 255, 0.98) 0%, rgba(252, 245, 255, 0.95) 55%, rgba(245, 243, 255, 0.98) 100%);
+  }
+
+  &--steps .container {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(40px, 6vw, 72px);
+  }
+}
+
+.prHead {
+  text-align: center;
+  max-width: 720px;
+  margin: 0 auto 32px;
+
+  &--spaced {
+    margin-top: 48px;
+  }
+}
+
+.prEyebrow {
+  margin: 0 0 8px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  font-size: 12px;
+  color: $pr-purple;
+}
+
+.prH2 {
+  margin: 0 0 12px;
+  font-size: clamp(22px, 3.6vw, 30px);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: $text-strong;
+
+  &--left {
+    text-align: left;
+    margin-bottom: 10px;
+  }
+}
+
+.prH3 {
+  margin: 0;
+  font-size: clamp(20px, 2.8vw, 26px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: $pr-purple;
+}
+
+.prSubCenter {
+  margin: 8px 0 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: rgba(15, 23, 42, 0.82);
+}
+
+.prChevron {
+  margin-top: 8px;
+  font-size: 22px;
+  color: $pr-purple;
+  line-height: 1;
+}
+
+.prIntroWide {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.65;
+  text-align: center;
+}
+
+.prSplit {
+  display: grid;
+  gap: 28px;
+  align-items: center;
+
+  @media (min-width: 900px) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    gap: 40px;
+  }
+
+  &--alignStart {
+    align-items: start;
+  }
+}
+
+.prStack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.prBadge {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  font-size: 14px;
+  color: #fff;
+  background: $pr-purple;
+}
+
+.prLead {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: rgba(15, 23, 42, 0.78);
+}
+
+.prLeadStrong {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 900;
+  color: $text-strong;
+}
+
+.prBody {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.65;
+  max-width: 52ch;
+}
+
+.prEm {
+  color: rgba(37, 99, 235, 0.95);
+  font-weight: 900;
+}
+
+.prCta {
+  margin-top: 8px;
+  align-self: flex-start;
+  text-decoration: none;
+
+  &--dark {
+    border-color: rgba(15, 23, 42, 0.14);
+    color: $text-strong;
+    background: #fff;
+  }
+}
+
+.prMediaPanel {
+  position: relative;
+  border-radius: 20px;
+  min-height: 280px;
+  padding: 28px 22px;
+  overflow: hidden;
+  background: linear-gradient(145deg, rgba(99, 102, 241, 0.12) 0%, rgba(244, 114, 182, 0.1) 100%);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.prMediaPanelGlow {
+  position: absolute;
+  inset: -40%;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.55), transparent 45%),
+    radial-gradient(circle at 70% 60%, rgba(129, 140, 248, 0.25), transparent 40%);
+  pointer-events: none;
+}
+
+.prMediaCard {
+  position: relative;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 22px 20px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.1);
+}
+
+.prMediaCardTitle {
+  margin: 0 0 12px;
+  text-align: center;
+  font-size: 17px;
+  font-weight: 900;
+  color: $pr-navy;
+}
+
+.prMediaCardText {
+  margin: 0;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.65;
+  color: rgba(15, 23, 42, 0.72);
+}
+
+.prHighlightCard {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 28px 24px 32px;
+  border-radius: 20px;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+  text-align: center;
+}
+
+.prHighlightArt {
+  position: relative;
+  height: 100px;
+  margin-bottom: 16px;
+}
+
+.prSpark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border-radius: 2px;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  box-shadow: 0 0 0 6px rgba(251, 191, 36, 0.35);
+  animation: prSpark 2.4s ease-in-out infinite;
+
+  &--2 {
+    margin-left: -36px;
+    margin-top: 8px;
+    animation-delay: 0.4s;
+  }
+
+  &--3 {
+    margin-left: 28px;
+    margin-top: -12px;
+    animation-delay: 0.8s;
+  }
+}
+
+@keyframes prSpark {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prSpark {
+    animation: none;
+  }
+}
+
+.prHighlightTitle {
+  margin: 0 0 12px;
+  font-size: 20px;
+  font-weight: 900;
+  color: $pr-navy;
+}
+
+.prHighlightBody {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.prCardStack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.prInfoCard {
+  padding: 20px 20px 22px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.07);
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.06);
+}
+
+.prInfoCardArt {
+  height: 120px;
+  border-radius: 12px;
+  margin-bottom: 14px;
+  background: linear-gradient(120deg, rgba(148, 163, 184, 0.35) 0%, rgba(99, 102, 241, 0.2) 100%);
+
+  &--suit {
+    background: linear-gradient(105deg, rgba(71, 85, 105, 0.35), rgba(30, 41, 59, 0.45)),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent);
+  }
+
+  &--cafe {
+    background: linear-gradient(120deg, rgba(251, 207, 232, 0.45), rgba(253, 224, 71, 0.2));
+  }
+}
+
+.prInfoCardTitle {
+  margin: 0 0 8px;
+  text-align: center;
+  font-size: 17px;
+  font-weight: 900;
+  color: $pr-navy;
+}
+
+.prInfoCardBody {
+  margin: 0;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.prAfterCol {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.prProfileMock {
+  position: relative;
+  height: 160px;
+  border-radius: 16px;
+  background: rgba(237, 233, 254, 0.85);
+  border: 1px solid rgba(139, 92, 246, 0.15);
+}
+
+.prProfileMockCard {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 200px;
+  margin-left: -110px;
+  margin-top: -70px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.12);
+  transform: rotate(-4deg);
+
+  &--back {
+    margin-left: -70px;
+    margin-top: -50px;
+    opacity: 0.92;
+    transform: rotate(6deg);
+    z-index: -1;
+  }
+}
+
+.prProfileMockTag {
+  display: block;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: $pr-purple;
+  margin-bottom: 8px;
+}
+
+.prProfileMockRow {
+  height: 10px;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.08);
+  margin-bottom: 8px;
+
+  &--short {
+    width: 65%;
+  }
+}
+
+.prAfterSubTitle {
+  margin: 4px 0 0;
+  font-size: 18px;
+  font-weight: 900;
+  color: $pr-purple;
+  text-align: center;
+}
+
+.prWalkIllustration {
+  height: 140px;
+  border-radius: 14px;
+  margin-top: 4px;
+  background: linear-gradient(90deg, rgba(34, 197, 94, 0.15), rgba(59, 130, 246, 0.12)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.5), transparent);
+}
+
+.prSoloCard {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 0 8px 8px;
+  text-align: center;
+}
+
+.prSoloCardArt {
+  height: 180px;
+  border-radius: 16px;
+  margin-bottom: 16px;
+  background: linear-gradient(160deg, rgba(52, 211, 153, 0.25), rgba(59, 130, 246, 0.15));
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.prSoloCardTitle {
+  margin: 0 0 10px;
+  font-size: 20px;
+  font-weight: 900;
+  color: $pr-navy;
+}
+
+.prSoloCardBody {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.prBigRow {
+  display: grid;
+  gap: 28px;
+  align-items: center;
+  margin-bottom: 48px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  @media (min-width: 900px) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 36px;
+  }
+
+  &--reverse {
+    @media (min-width: 900px) {
+      direction: rtl;
+
+      > * {
+        direction: ltr;
+      }
+    }
+  }
+}
+
+.prBigText {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.prMemberList {
+  list-style: none;
+  margin: 0;
+  padding: 16px 18px;
+}
+
+.prMemberRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(15, 23, 42, 0.82);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.prMemberLine {
+  min-width: 0;
+  flex: 1;
+}
+
+.prMemberPill {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  color: #fff;
+  background: $pr-purple;
+}
+
+.prStats {
+  padding: 20px 22px;
+}
+
+.prStatRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  font-size: 15px;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &--strong {
+    font-weight: 900;
+    color: $pr-navy;
+  }
+}
+
+.prStatLabel {
+  font-weight: 800;
+  color: rgba(15, 23, 42, 0.78);
+  padding-right: 12px;
+}
+
+.prStatValue {
+  font-weight: 900;
+  color: $pr-purple;
+}
+
+.prVerifyRow {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  display: grid;
+  gap: 16px;
+
+  @media (min-width: 720px) {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+}
+
+.prVerifyCard {
+  position: relative;
+  padding: 36px 18px 22px;
+  text-align: center;
+  border-radius: 16px;
+}
+
+.prVerifyIconWrap {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.prIcon {
+  display: block;
+  margin: 8px auto 0;
+  color: rgba(15, 23, 42, 0.55);
+
+  &--line {
+    color: rgba(79, 70, 229, 0.85);
+  }
+}
+
+.prVerifyTitle {
+  margin: 12px 0 6px;
+  font-size: 16px;
+  font-weight: 900;
+  color: $pr-navy;
+}
+
+.prVerifyDesc {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.prStepRow {
+  display: grid;
+  gap: 22px;
+  align-items: center;
+
+  @media (min-width: 860px) {
+    grid-template-columns: 1fr 1fr;
+    gap: 36px;
+  }
+
+  &--reverse {
+    @media (min-width: 860px) {
+      .prStepVisual {
+        order: 2;
+      }
+      .prStepText {
+        order: 1;
+      }
+    }
+  }
+}
+
+.prStepVisual {
+  min-height: 200px;
+  border-radius: 16px;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  background: linear-gradient(135deg, rgba(226, 232, 240, 0.6), rgba(224, 231, 255, 0.5));
+
+  &--01 {
+    background: linear-gradient(145deg, rgba(248, 250, 252, 0.95), rgba(199, 210, 254, 0.35));
+    position: relative;
+
+    &::after {
+      content: 'CONTRACT';
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) rotate(-6deg);
+      font-weight: 900;
+      letter-spacing: 0.2em;
+      font-size: 13px;
+      color: rgba(15, 23, 42, 0.35);
+    }
+  }
+
+  &--02 {
+    background: linear-gradient(160deg, rgba(237, 233, 254, 0.9), rgba(254, 243, 199, 0.35));
+  }
+
+  &--03 {
+    background: linear-gradient(120deg, rgba(254, 215, 170, 0.35), rgba(191, 219, 254, 0.45));
+  }
+
+  &--04 {
+    background: linear-gradient(180deg, rgba(187, 247, 208, 0.35), rgba(253, 224, 71, 0.2));
+  }
+
+  &--05 {
+    background: linear-gradient(135deg, rgba(165, 180, 252, 0.35), rgba(52, 211, 153, 0.2));
+  }
+}
+
+.prStepText {
+  min-width: 0;
+}
+
+.prStepTitle {
+  margin: 0 0 12px;
+  font-size: clamp(17px, 2.2vw, 20px);
+  font-weight: 900;
+  color: $pr-navy;
+  letter-spacing: -0.02em;
+}
+
+.prExtra {
+  margin: 10px 0 0;
+  font-size: 13px;
+  line-height: 1.55;
+}

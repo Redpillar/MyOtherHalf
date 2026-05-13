@@ -1,0 +1,163 @@
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import type { PublicManager } from '../admin/managerTypes'
+import { SiteHeader } from '../components/SiteHeader'
+import { apiFetch } from '../lib/apiFetch'
+import './landing.scss'
+import './managerIntro.scss'
+
+const PAGE_SIZE = 4
+
+function managerPhotoUrl(id: number): string {
+  return `/api/managers/${encodeURIComponent(String(id))}/photo`
+}
+
+function StarRow({ value }: { value: number }) {
+  const n = Math.min(5, Math.max(0, Math.round(value)))
+  return (
+    <div className="managerStars" aria-label={`별점 ${n}점`}>
+      {[1, 2, 3, 4, 5].map((i) => (
+        <span key={i} className={`managerStar${i <= n ? ' on' : ''}`} aria-hidden>
+          ★
+        </span>
+      ))}
+    </div>
+  )
+}
+
+export function ManagerIntro() {
+  const [managers, setManagers] = useState<PublicManager[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const r = await apiFetch('/api/managers')
+      const j = (await r.json()) as { managers?: PublicManager[]; error?: string }
+      if (!r.ok) throw new Error(j.error || '목록을 불러오지 못했습니다.')
+      setManagers(Array.isArray(j.managers) ? j.managers : [])
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '연결을 확인해 주세요.')
+      setManagers([])
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    void load()
+  }, [load])
+
+  const totalPages = Math.max(1, Math.ceil(managers.length / PAGE_SIZE))
+  const safePage = Math.min(page, totalPages)
+  const pageSlice = useMemo(() => {
+    const p = Math.min(page, totalPages)
+    const start = (p - 1) * PAGE_SIZE
+    return managers.slice(start, start + PAGE_SIZE)
+  }, [managers, page, totalPages])
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages)
+  }, [page, totalPages])
+
+  return (
+    <div className="managerIntroPage">
+      <SiteHeader />
+
+      <section className="managerHero" aria-labelledby="manager-hero-title">
+        <div className="container managerHeroInner">
+          <h1 id="manager-hero-title" className="managerHeroTitle">
+            매니저 소개
+          </h1>
+          <p className="managerHeroSub">내반쪽 전담 매니저가 진심으로 매칭을 도와드립니다.</p>
+        </div>
+      </section>
+
+      <main className="managerMain">
+        <div className="container">
+          {error ? <p className="managerError">{error}</p> : null}
+          {loading ? (
+            <p className="muted" style={{ textAlign: 'center', fontWeight: 600 }}>
+              불러오는 중…
+            </p>
+          ) : managers.length === 0 ? (
+            <div className="managerEmpty">등록된 매니저가 없습니다. 잠시 후 다시 확인해 주세요.</div>
+          ) : (
+            <>
+              <div className="managerGrid">
+                {pageSlice.map((m) => (
+                  <article key={m.id} className="managerCard">
+                    <div className="managerCardImgWrap">
+                      {m.hasPhoto ? (
+                        <img className="managerCardImg" src={managerPhotoUrl(m.id)} alt={`${m.name} 매니저`} />
+                      ) : (
+                        <div className="managerCardImg" aria-hidden style={{ background: '#cbd5e1' }} />
+                      )}
+                    </div>
+                    <div className="managerCardBody">
+                      <div className="managerCardHead">
+                        <h2 className="managerCardName">{m.name}</h2>
+                        <StarRow value={m.ratingStars} />
+                      </div>
+                      <div className="managerStat">
+                        <span>총 소개팅 성사</span>
+                        <span className="managerStatVal">{m.successCount}건</span>
+                      </div>
+                      <div className="managerStat">
+                        <span>후기</span>
+                        <span className="managerStatVal">{m.reviewCount}건</span>
+                      </div>
+                      <Link className="managerCardBtn" to="/join">
+                        소개받기
+                      </Link>
+                    </div>
+                  </article>
+                ))}
+              </div>
+
+              {totalPages > 1 ? (
+                <nav className="managerPagination" aria-label="페이지">
+                  <button
+                    type="button"
+                    className="managerPageBtn"
+                    disabled={safePage <= 1}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  >
+                    이전
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      className={`managerPageBtn${n === safePage ? ' active' : ''}`}
+                      onClick={() => setPage(n)}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    className="managerPageBtn"
+                    disabled={safePage >= totalPages}
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  >
+                    다음
+                  </button>
+                </nav>
+              ) : null}
+            </>
+          )}
+
+          <footer className="managerFooter">
+            내반쪽 · 매니저 소개
+            <br />
+            Copyright {new Date().getFullYear()} 내반쪽. All rights reserved.
+          </footer>
+        </div>
+      </main>
+    </div>
+  )
+}

@@ -1,0 +1,60 @@
+.inquiryListPage .inquiryListInner {
+  max-width: 960px;
+}
+
+.inquiryListHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.inquiryListTitle {
+  margin-bottom: 6px;
+}
+
+.inquiryListSub {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: rgba(15, 23, 42, 0.55);
+}
+
+.inquiryAskBtn {
+  display: inline-block;
+  text-align: center;
+  text-decoration: none;
+  padding: 12px 22px;
+  border-radius: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.inquiryTableWrap {
+  margin-top: 8px;
+}
+
+.inquiryDetailMeta {
+  margin: 0 0 20px;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(15, 23, 42, 0.5);
+}
+
+.inquiryDetailBlock {
+  margin-bottom: 16px;
+}
+
+.inquiryReplyBody {
+  margin-top: 8px;
+}
+
+.inquiryDetailPending {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(15, 23, 42, 0.55);
+  line-height: 1.5;
+}

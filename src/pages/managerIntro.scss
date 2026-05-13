@@ -1,0 +1,235 @@
+@use '../styles/tokens' as *;
+
+.managerIntroPage {
+  min-height: 100vh;
+  background: #f8fafc;
+  color: $text;
+}
+
+.managerHero {
+  position: relative;
+  padding: 56px 0 48px;
+  overflow: hidden;
+  color: #fff;
+  text-align: center;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #6b5cff 0%, #4f7cff 42%, #2b4acb 100%);
+    z-index: 0;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.22;
+    background: radial-gradient(ellipse 120% 80% at 50% 100%, rgba(0, 0, 0, 0.35), transparent 55%);
+    z-index: 0;
+  }
+}
+
+.managerHeroInner {
+  position: relative;
+  z-index: 1;
+}
+
+.managerHeroTitle {
+  margin: 0 0 8px;
+  font-size: clamp(26px, 4vw, 34px);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  text-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+}
+
+.managerHeroSub {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  opacity: 0.92;
+}
+
+.managerMain {
+  padding: 36px 0 72px;
+}
+
+.managerGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 22px;
+
+  @media (max-width: 1100px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.managerCard {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.07);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.managerCardImgWrap {
+  aspect-ratio: 3 / 4;
+  background: linear-gradient(145deg, #e2e8f0 0%, #cbd5e1 100%);
+  overflow: hidden;
+}
+
+.managerCardImg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.managerCardBody {
+  padding: 16px 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.managerCardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.managerCardName {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 900;
+  color: $text-strong;
+  letter-spacing: -0.02em;
+}
+
+.managerStars {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.managerStar {
+  font-size: 15px;
+  line-height: 1;
+  color: rgba(15, 23, 42, 0.18);
+
+  &.on {
+    color: #3b6cff;
+  }
+}
+
+.managerStat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(15, 23, 42, 0.55);
+}
+
+.managerStatVal {
+  color: $text-strong;
+  font-variant-numeric: tabular-nums;
+}
+
+.managerCardBtn {
+  margin-top: auto;
+  display: block;
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  background: linear-gradient(135deg, #4c3bcf 0%, #2f4ad4 100%);
+  color: #fff;
+  box-shadow: 0 10px 28px rgba(47, 74, 212, 0.35);
+
+  &:hover {
+    filter: brightness(1.05);
+  }
+}
+
+.managerPagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 32px;
+}
+
+.managerPageBtn {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: #fff;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  color: rgba(15, 23, 42, 0.75);
+
+  &:hover:not(:disabled) {
+    border-color: rgba(75, 99, 255, 0.45);
+    color: #3d5cef;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  &.active {
+    background: rgba(15, 23, 42, 0.08);
+    border-color: rgba(15, 23, 42, 0.2);
+    color: $text-strong;
+  }
+}
+
+.managerEmpty {
+  text-align: center;
+  padding: 48px 20px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px dashed rgba(15, 23, 42, 0.15);
+  color: rgba(15, 23, 42, 0.55);
+  font-weight: 600;
+}
+
+.managerFooter {
+  margin-top: 48px;
+  padding: 28px 0;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  font-size: 12px;
+  line-height: 1.65;
+  color: rgba(15, 23, 42, 0.45);
+  text-align: center;
+}
+
+.managerError {
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(254, 242, 242, 0.95);
+  color: #b91c1c;
+  font-weight: 700;
+  font-size: 14px;
+}

@@ -1,0 +1,102 @@
+@use '../styles/tokens' as *;
+
+.signupCompleteHeroWrap {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  margin: 0 auto;
+}
+
+.signupCompleteBadge {
+  position: absolute;
+  right: -6px;
+  bottom: -4px;
+  width: 56px;
+  height: 56px;
+  filter: drop-shadow(0 10px 24px rgba(42, 31, 82, 0.22));
+}
+
+.signupCompleteCheckSvg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.signupCompleteCard {
+  margin: 8px auto 0;
+  max-width: 520px;
+  padding: 22px 22px 20px;
+  border-radius: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.95) 0%, #fff 55%);
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.06);
+}
+
+.signupCompleteLead {
+  margin: 0 0 10px;
+  text-align: center;
+  font-size: 17px;
+  line-height: 1.55;
+  font-weight: 700;
+  color: $text-strong;
+}
+
+.signupCompleteName {
+  font-weight: 900;
+  color: #2a1f52;
+}
+
+.signupCompleteMeta {
+  margin: 0 0 18px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.55);
+}
+
+.signupCompleteUserId {
+  margin-left: 6px;
+  font-weight: 800;
+  color: rgba(15, 23, 42, 0.82);
+}
+
+.signupCompleteSteps {
+  margin: 0;
+  padding: 0 0 0 18px;
+  font-size: 14px;
+  line-height: 1.65;
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.68);
+
+  li + li {
+    margin-top: 8px;
+  }
+}
+
+.signupCompleteActions {
+  margin-top: 28px;
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.signupCompleteSecondary {
+  display: block;
+  text-align: center;
+  padding: 12px 16px;
+  font-size: 15px;
+  font-weight: 800;
+  color: rgba(15, 23, 42, 0.55);
+  text-decoration: none;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: #fff;
+
+  &:hover {
+    color: rgba(15, 23, 42, 0.78);
+    border-color: rgba(15, 23, 42, 0.18);
+  }
+}

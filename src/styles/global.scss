@@ -1,0 +1,159 @@
+@use './tokens' as *;
+@use './reset';
+
+body {
+  font-family: $font-sans;
+  background: $bg;
+  color: $text;
+}
+
+::selection {
+  background: rgba($brand, 0.18);
+}
+
+.container {
+  width: min(1120px, calc(100% - 40px));
+  margin: 0 auto;
+}
+
+.section {
+  padding: 84px 0;
+
+  @media (max-width: 900px) {
+    padding: 64px 0;
+  }
+}
+
+.sectionHeader {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 28px;
+
+  h2 {
+    margin: 0;
+    font-size: 34px;
+    letter-spacing: -0.02em;
+    color: $text-strong;
+  }
+
+  p {
+    margin: 0;
+    color: $muted;
+  }
+}
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.chip {
+  border: 1px solid $border;
+  background: $card;
+  color: $text-strong;
+  padding: 10px 12px;
+  border-radius: 999px;
+  font-size: 14px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  user-select: none;
+
+  &:focus-visible {
+    outline: 3px solid rgba($brand, 0.35);
+    outline-offset: 3px;
+  }
+}
+
+.btnPrimary {
+  background: linear-gradient(135deg, $brand 0%, $brand-2 100%);
+  color: white;
+  box-shadow: 0 14px 40px rgba(122, 167, 255, 0.35);
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.btnGhost {
+  background: transparent;
+  color: $text-strong;
+  border-color: $border;
+
+  &:hover {
+    background: rgba($brand, 0.06);
+    border-color: rgba($brand, 0.35);
+  }
+}
+
+.card {
+  background: $card;
+  border: 1px solid $border;
+  border-radius: 20px;
+  box-shadow: $shadow;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.grid3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.muted {
+  color: $muted;
+}
+
+.kpiRow {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+
+  @media (max-width: 900px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.kpi {
+  padding: 18px;
+
+  .label {
+    margin: 0;
+    color: $muted;
+    font-weight: 600;
+    font-size: 13px;
+  }
+
+  .value {
+    margin: 6px 0 0;
+    color: $text-strong;
+    font-weight: 900;
+    font-size: 26px;
+    letter-spacing: -0.02em;
+  }
+}
