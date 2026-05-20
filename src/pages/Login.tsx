@@ -1,21 +1,62 @@
-import { type FormEvent, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { type FormEvent, useMemo, useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { SiteHeader } from '../components/SiteHeader'
+import { apiFetch, readJsonResponse } from '../lib/apiFetch'
 import { setMemberProfile, setMemberSession } from '../lib/memberSession'
 import './signup.scss'
 import './login.scss'
 
 export function Login() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const returnTo = useMemo(() => {
+    const raw = searchParams.get('returnTo') || '/'
+    if (!raw.startsWith('/') || raw.startsWith('//')) return '/'
+    return raw
+  }, [searchParams])
   const [loginId, setLoginId] = useState('')
+  const [loginPw, setLoginPw] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
 
-  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const id = loginId.trim()
-    if (id) setMemberProfile({ userId: id })
-    else setMemberProfile(null)
-    setMemberSession(true)
-    navigate('/', { replace: true })
+    const password = loginPw
+    if (!id) {
+      setError('아이디를 입력해 주세요.')
+      return
+    }
+    if (!password) {
+      setError('비밀번호를 입력해 주세요.')
+      return
+    }
+    setSubmitting(true)
+    setError(null)
+    try {
+      const r = await apiFetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: id, password }),
+      })
+      const j = await readJsonResponse<{ member?: { userId?: string }; error?: string }>(r)
+      if (!r.ok) {
+        setError(j.error || '로그인에 실패했습니다.')
+        return
+      }
+      const nextId = String(j.member?.userId || '').trim()
+      if (!nextId) {
+        setError('회원 정보를 불러오지 못했습니다.')
+        return
+      }
+      setMemberProfile({ userId: nextId })
+      setMemberSession(true)
+      navigate(returnTo, { replace: true })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '로그인 중 오류가 발생했습니다.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -28,22 +69,17 @@ export function Login() {
 
           <div className="signupHero" aria-hidden="true">
             <div className="signupHeroCircles">
-              <div className="signupHeroSun" />
-              <svg className="signupHeroSilhouette" viewBox="0 0 200 120" fill="none">
-                <path
-                  d="M55 95c0-22 18-40 40-40s40 18 40 40H55zm40-52a16 16 0 1 1 0-32 16 16 0 0 1 0 32zm45 52c0-18 14-32 32-32s32 14 32 32h-64zm32-44a14 14 0 1 1 0-28 14 14 0 0 1 0 28z"
-                  fill="rgba(15,23,42,0.35)"
-                />
-              </svg>
+              <img className="signupHeroImage" src="/hero/login-hero.png" alt="" />
             </div>
           </div>
 
-          <p className="loginTagline">가벼운 소개팅과 결혼 중개의 중간,</p>
+          <p className="loginTagline">검증된 회원, 1:1 맞춤 상담</p>
           <p className="loginTagline loginTaglineStrong">
-            그 사이에서 <strong>내반쪽</strong>이 기준이 됩니다.
+            <strong>내반쪽</strong>만의 만남 방식.
           </p>
 
           <form className="signupForm loginForm" onSubmit={onSubmit}>
+            {error ? <p className="adminError" style={{ marginTop: 14 }}>{error}</p> : null}
             <div className="formRow">
               <label className="formLabel" htmlFor="loginId">
                 아이디
@@ -73,14 +109,17 @@ export function Login() {
                   name="loginPw"
                   type="password"
                   className="formInput"
+                  value={loginPw}
+                  onChange={(e) => setLoginPw(e.target.value)}
                   placeholder="비밀번호를 입력하세요"
                   autoComplete="current-password"
+                  required
                 />
               </div>
             </div>
 
-            <button type="submit" className="submitBtn loginSubmitBtn">
-              로그인
+            <button type="submit" className="submitBtn loginSubmitBtn" disabled={submitting}>
+              {submitting ? '로그인 중…' : '로그인'}
             </button>
 
             <div className="loginAuthLinks">

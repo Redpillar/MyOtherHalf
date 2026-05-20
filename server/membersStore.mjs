@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 export const DATA_PATH = join(__dirname, 'data', 'members.json')
 
-/** @typedef {{ id: number; phone: string; name: string; birth: string; userId: string; passwordHash: string; gender: string; height: string; weight: string; job: string; region1: string; region2: string; education: string; mbti: string; smoke: string; drink: string; car: string; appeal: string; obligationAgreed: boolean; createdAt: string; photos?: string[] }} Member */
+/** @typedef {{ id: number; phone: string; name: string; birth: string; userId: string; passwordHash: string; gender: string; height: string; weight: string; job: string; region1: string; region2: string; education: string; mbti: string; smoke: string; drink: string; car: string; appeal: string; obligationAgreed: boolean; createdAt: string; photos?: string[]; locationLat?: number | null; locationLng?: number | null; locationAccuracyM?: number | null; locationUpdatedAt?: string; consultationStatus?: string; consultationRequestedAt?: string }} Member */
 
 function ensureDir() {
   mkdirSync(dirname(DATA_PATH), { recursive: true })
@@ -57,6 +57,19 @@ export function updateMember(id, patch) {
   db.members[i] = { ...db.members[i], ...patch }
   saveDb(db)
   return db.members[i]
+}
+
+export function listMembers() {
+  const db = loadDb()
+  return db.members.slice().sort((a, b) => b.id - a.id)
+}
+
+/** @param {string|number} id */
+export function getMemberById(id) {
+  const db = loadDb()
+  const n = Number(id)
+  if (!Number.isFinite(n)) return null
+  return db.members.find((x) => x.id === n) ?? null
 }
 
 /** @param {string} userId */

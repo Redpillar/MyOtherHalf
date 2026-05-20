@@ -1,33 +1,12 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { loadAdminUiSettings, useAdminUiSettings } from '../admin/adminUiSettings'
+import { useAdminUiSettings } from '../admin/adminUiSettings'
 import { clearAdminToken, useAdminToken } from '../admin/adminSession'
-import { apiFetch } from '../lib/apiFetch'
 import '../pages/admin.scss'
 
 export function AdminMenu() {
+  const navigate = useNavigate()
   const token = useAdminToken()
   const prefs = useAdminUiSettings()
-  const navigate = useNavigate()
-
-  const onLogout = async () => {
-    const s = loadAdminUiSettings()
-    if (s.confirmBeforeLogout) {
-      if (!window.confirm('로그아웃할까요?')) return
-    }
-    const t = token
-    if (t) {
-      try {
-        await apiFetch('/api/admin/logout', {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${t}` },
-        })
-      } catch {
-        /* ignore */
-      }
-    }
-    clearAdminToken()
-    navigate('/admin')
-  }
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     isActive ? 'adminMenuLink adminMenuLinkActive' : 'adminMenuLink'
@@ -54,15 +33,18 @@ export function AdminMenu() {
     )
   }
 
-  const leftAny =
+  const hasAnyLoggedIn =
     li.dashboard ||
     li.members ||
     li.managerList ||
     li.managerRegister ||
     li.inquiries ||
+    li.notices ||
+    li.reviews ||
     li.recommendations ||
     li.settings ||
-    li.menuSettings
+    li.menuSettings ||
+    li.logout
 
   return (
     <nav className="adminMenu" aria-label="관리자 메뉴">
@@ -77,7 +59,7 @@ export function AdminMenu() {
         </NavLink>
       ) : null}
       {li.managerList ? (
-        <NavLink to="/admin/managers" className={linkClass} end>
+        <NavLink to="/admin/managers" className={linkClass}>
           매니저 목록
         </NavLink>
       ) : null}
@@ -87,30 +69,52 @@ export function AdminMenu() {
         </NavLink>
       ) : null}
       {li.inquiries ? (
-        <NavLink to="/admin/inquiries" className={linkClass} end>
+        <NavLink to="/admin/inquiries" className={linkClass}>
           1:1 문의
         </NavLink>
       ) : null}
+      {li.notices ? (
+        <NavLink to="/admin/notices" className={linkClass}>
+          공지사항
+        </NavLink>
+      ) : null}
+      {li.reviews ? (
+        <NavLink to="/admin/reviews" className={linkClass}>
+          커플 후기
+        </NavLink>
+      ) : null}
       {li.recommendations ? (
-        <NavLink to="/admin/recommendations" className={linkClass} end>
-          랜딩 추천
+        <NavLink to="/admin/recommendations" className={linkClass}>
+          랜딩 추천 문구
         </NavLink>
       ) : null}
       {li.settings ? (
         <NavLink to="/admin/settings" className={linkClass}>
-          설정
+          관리자 설정
         </NavLink>
       ) : null}
       {li.menuSettings ? (
         <NavLink to="/admin/menu-settings" className={linkClass}>
-          메뉴 설정
+          메뉴 표시 설정
         </NavLink>
       ) : null}
-      {leftAny && li.logout ? <span className="adminMenuSpacer" aria-hidden /> : null}
       {li.logout ? (
-        <button type="button" className="adminMenuLogout" onClick={() => void onLogout()}>
-          로그아웃
-        </button>
+        <>
+          <span className="adminMenuSpacer" aria-hidden="true" />
+          <button
+            type="button"
+            className="adminMenuLogout"
+            onClick={() => {
+              clearAdminToken()
+              navigate('/admin', { replace: true })
+            }}
+          >
+            로그아웃
+          </button>
+        </>
+      ) : null}
+      {!hasAnyLoggedIn ? (
+        <span className="adminMenuEmptyHint">표시할 메뉴가 없습니다. 메뉴 설정에서 켜 주세요.</span>
       ) : null}
     </nav>
   )

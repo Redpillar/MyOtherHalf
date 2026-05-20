@@ -4,6 +4,9 @@ const SESSION_KEY = 'demo_member_logged_in'
 const PROFILE_KEY = 'demo_member_profile'
 const EVT = 'demo-member-session'
 
+let cachedProfileRaw: string | null | undefined
+let cachedProfileValue: MemberProfile | null = null
+
 export type MemberProfile = {
   userId: string
 }
@@ -26,13 +29,27 @@ export function getMemberSessionServerSnapshot(): boolean {
 }
 
 export function getMemberProfile(): MemberProfile | null {
+  if (typeof window === 'undefined') return null
   try {
     const raw = sessionStorage.getItem(PROFILE_KEY)
-    if (!raw) return null
+    if (raw === cachedProfileRaw) return cachedProfileValue
+    if (!raw) {
+      cachedProfileRaw = null
+      cachedProfileValue = null
+      return null
+    }
     const o = JSON.parse(raw) as { userId?: unknown }
-    if (!o || typeof o.userId !== 'string' || !o.userId.trim()) return null
-    return { userId: o.userId.trim() }
+    if (!o || typeof o.userId !== 'string' || !o.userId.trim()) {
+      cachedProfileRaw = raw
+      cachedProfileValue = null
+      return null
+    }
+    cachedProfileRaw = raw
+    cachedProfileValue = { userId: o.userId.trim() }
+    return cachedProfileValue
   } catch {
+    cachedProfileRaw = null
+    cachedProfileValue = null
     return null
   }
 }

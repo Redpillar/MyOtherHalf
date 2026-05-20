@@ -1,6 +1,7 @@
 import { type FormEvent, useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import type { AdminManagerRow } from '../admin/managerTypes'
+import { formatManagerTagsInput } from '../admin/managerTypes'
 import { clearAdminToken, useAdminToken } from '../admin/adminSession'
 import { AdminMenu } from '../components/AdminMenu'
 import { SiteHeader } from '../components/SiteHeader'
@@ -19,9 +20,10 @@ export function AdminManagerEdit() {
   const id = idParam && /^\d+$/.test(idParam) ? Number(idParam) : NaN
 
   const [name, setName] = useState('')
-  const [ratingStars, setRatingStars] = useState(5)
+  const [intro, setIntro] = useState('')
+  const [tags, setTags] = useState('')
+  const [consultMethod, setConsultMethod] = useState('')
   const [successCount, setSuccessCount] = useState(0)
-  const [reviewCount, setReviewCount] = useState(0)
   const [file, setFile] = useState<File | null>(null)
   const [hasPhoto, setHasPhoto] = useState(false)
 
@@ -58,9 +60,10 @@ export function AdminManagerEdit() {
       const m = j.manager
       if (!m) throw new Error('데이터가 없습니다.')
       setName(m.name)
-      setRatingStars(m.ratingStars)
+      setIntro(m.intro || '')
+      setTags(formatManagerTagsInput(m.tags))
+      setConsultMethod(m.consultMethod || '')
       setSuccessCount(m.successCount)
-      setReviewCount(m.reviewCount)
       setHasPhoto(m.hasPhoto)
       setFile(null)
     } catch (e) {
@@ -83,9 +86,10 @@ export function AdminManagerEdit() {
     try {
       const fd = new FormData()
       fd.set('name', name.trim())
-      fd.set('ratingStars', String(ratingStars))
+      fd.set('intro', intro.trim())
+      fd.set('tags', tags.trim())
+      fd.set('consultMethod', consultMethod.trim())
       fd.set('successCount', String(Math.max(0, Math.floor(successCount))))
-      fd.set('reviewCount', String(Math.max(0, Math.floor(reviewCount))))
       if (file) fd.set('photo', file)
 
       const r = await apiFetch(`/api/admin/managers/${encodeURIComponent(String(id))}`, {
@@ -104,6 +108,9 @@ export function AdminManagerEdit() {
         return
       }
       if (j.manager?.hasPhoto) setHasPhoto(true)
+      if (j.manager) {
+        setTags(formatManagerTagsInput(j.manager.tags))
+      }
       setFile(null)
       setPhotoBust((x) => x + 1)
     } catch (err) {
@@ -164,21 +171,45 @@ export function AdminManagerEdit() {
                 required
               />
 
-              <label className="adminLabel" htmlFor="edit-mgr-rating">
-                별점 (1~5)
+              <label className="adminLabel" htmlFor="edit-mgr-intro">
+                한 줄 소개
               </label>
-              <select
-                id="edit-mgr-rating"
+              <textarea
+                id="edit-mgr-intro"
                 className="adminPwInput"
-                value={ratingStars}
-                onChange={(e) => setRatingStars(Number(e.target.value))}
-              >
-                {[5, 4, 3, 2, 1].map((n) => (
-                  <option key={n} value={n}>
-                    {'★'.repeat(n) + '☆'.repeat(5 - n)} ({n})
-                  </option>
-                ))}
-              </select>
+                value={intro}
+                onChange={(e) => setIntro(e.target.value)}
+                placeholder="예: 20대·30대 직장인 맞춤 매칭 전문"
+                rows={3}
+                maxLength={200}
+              />
+
+              <label className="adminLabel" htmlFor="edit-mgr-tags">
+                키워드 태그
+              </label>
+              <input
+                id="edit-mgr-tags"
+                className="adminPwInput"
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
+                placeholder="예: 카카오톡 상담, 프로필 코칭, 첫 만남 케어"
+                maxLength={120}
+              />
+              <p className="adminHint muted" style={{ marginTop: -6 }}>
+                쉼표(,)로 구분해 입력하세요. 최대 8개까지 노출됩니다.
+              </p>
+
+              <label className="adminLabel" htmlFor="edit-mgr-consult">
+                상담 방식 (한 줄)
+              </label>
+              <input
+                id="edit-mgr-consult"
+                className="adminPwInput"
+                value={consultMethod}
+                onChange={(e) => setConsultMethod(e.target.value)}
+                placeholder="예: 신청 후 카카오톡으로 1:1 맞춤 상담을 진행합니다."
+                maxLength={100}
+              />
 
               <label className="adminLabel" htmlFor="edit-mgr-success">
                 총 소개팅 성사 (건)
@@ -190,18 +221,6 @@ export function AdminManagerEdit() {
                 className="adminPwInput"
                 value={successCount}
                 onChange={(e) => setSuccessCount(Number(e.target.value))}
-              />
-
-              <label className="adminLabel" htmlFor="edit-mgr-review">
-                후기 (건)
-              </label>
-              <input
-                id="edit-mgr-review"
-                type="number"
-                min={0}
-                className="adminPwInput"
-                value={reviewCount}
-                onChange={(e) => setReviewCount(Number(e.target.value))}
               />
 
               <label className="adminLabel" htmlFor="edit-mgr-photo">
@@ -224,9 +243,11 @@ export function AdminManagerEdit() {
           )}
 
           <p className="adminBack" style={{ marginTop: 20 }}>
-            <Link to="/managers">매니저 소개 보기</Link>
-            {' · '}
-            <Link to="/">메인</Link>
+            <Link to="/admin/dashboard">← 관리자 홈</Link>
+            {' > '}
+            <Link to="/admin/managers">매니저 목록</Link>
+            {' > '}
+            <span>매니저 수정</span>
           </p>
         </div>
       </main>

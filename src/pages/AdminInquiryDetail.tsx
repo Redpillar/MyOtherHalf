@@ -97,6 +97,8 @@ export function AdminInquiryDetail() {
         setAdminMemo(j.inquiry.adminMemo || '')
         setReply(j.inquiry.reply || '')
       }
+      window.alert('저장 되었습니다.')
+      navigate('/admin/inquiries', { replace: true })
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : '저장 중 오류')
     } finally {
@@ -222,7 +224,11 @@ export function AdminInquiryDetail() {
           )}
 
           <p className="adminBack">
-            <Link to="/">메인</Link>
+            <Link to="/admin/dashboard">← 관리자 홈</Link>
+            {' > '}
+            <Link to="/admin/inquiries">1:1 문의</Link>
+            {' > '}
+            <span>문의 상세</span>
           </p>
         </div>
       </main>

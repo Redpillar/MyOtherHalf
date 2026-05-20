@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom'
 import type { PublicManager } from '../admin/managerTypes'
 import { SiteHeader } from '../components/SiteHeader'
 import { apiFetch } from '../lib/apiFetch'
+import { useMemberSession } from '../lib/memberSession'
 import './landing.scss'
+import './signup.scss'
 import './managerIntro.scss'
 
 const PAGE_SIZE = 4
@@ -12,20 +14,8 @@ function managerPhotoUrl(id: number): string {
   return `/api/managers/${encodeURIComponent(String(id))}/photo`
 }
 
-function StarRow({ value }: { value: number }) {
-  const n = Math.min(5, Math.max(0, Math.round(value)))
-  return (
-    <div className="managerStars" aria-label={`별점 ${n}점`}>
-      {[1, 2, 3, 4, 5].map((i) => (
-        <span key={i} className={`managerStar${i <= n ? ' on' : ''}`} aria-hidden>
-          ★
-        </span>
-      ))}
-    </div>
-  )
-}
-
 export function ManagerIntro() {
+  const member = useMemberSession()
   const [managers, setManagers] = useState<PublicManager[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -67,17 +57,19 @@ export function ManagerIntro() {
     <div className="managerIntroPage">
       <SiteHeader />
 
-      <section className="managerHero" aria-labelledby="manager-hero-title">
-        <div className="container managerHeroInner">
-          <h1 id="manager-hero-title" className="managerHeroTitle">
-            매니저 소개
-          </h1>
-          <p className="managerHeroSub">내반쪽 전담 매니저가 진심으로 매칭을 도와드립니다.</p>
-        </div>
-      </section>
+      <main className="signupMain signupMain--hero">
+        <section className="managerHero" aria-labelledby="manager-hero-title">
+          <div className="container managerHeroInner">
+            <h1 id="manager-hero-title" className="managerHeroTitle">
+              매니저 소개
+            </h1>
+            <p className="managerHeroLead">
+              내반쪽 전담 매니저를 소개합니다. 상담 신청 후 회원님께 맞는 매니저가 연결됩니다.
+            </p>
+          </div>
+        </section>
 
-      <main className="managerMain">
-        <div className="container">
+        <div className="container managerMain">
           {error ? <p className="managerError">{error}</p> : null}
           {loading ? (
             <p className="muted" style={{ textAlign: 'center', fontWeight: 600 }}>
@@ -98,25 +90,50 @@ export function ManagerIntro() {
                       )}
                     </div>
                     <div className="managerCardBody">
-                      <div className="managerCardHead">
-                        <h2 className="managerCardName">{m.name}</h2>
-                        <StarRow value={m.ratingStars} />
-                      </div>
+                      <h2 className="managerCardName">{m.name}</h2>
+                      {m.intro ? <p className="managerCardIntro">{m.intro}</p> : null}
+                      {m.tags.length > 0 ? (
+                        <div className="managerCardTags">
+                          {m.tags.map((tag) => (
+                            <span key={tag} className="managerCardTag">
+                              #{tag}
+                            </span>
+                          ))}
+                        </div>
+                      ) : null}
+                      {m.consultMethod ? (
+                        <p className="managerCardConsult">{m.consultMethod}</p>
+                      ) : null}
                       <div className="managerStat">
                         <span>총 소개팅 성사</span>
                         <span className="managerStatVal">{m.successCount}건</span>
                       </div>
-                      <div className="managerStat">
-                        <span>후기</span>
-                        <span className="managerStatVal">{m.reviewCount}건</span>
-                      </div>
-                      <Link className="managerCardBtn" to="/join">
-                        소개받기
-                      </Link>
                     </div>
                   </article>
                 ))}
               </div>
+
+              <section className="managerCta card" aria-labelledby="manager-cta-title">
+                <h2 id="manager-cta-title" className="managerCtaTitle">
+                  전담 매니저와 상담을 시작해 보세요
+                </h2>
+                <p className="managerCtaLead">
+                  매니저는 회원님 프로필과 상담 내용을 바탕으로 배정됩니다.
+                  <br />
+                  신청 후 카카오톡으로 연락드립니다.
+                </p>
+                <div className="managerCtaActions">
+                  {member ? (
+                    <Link className="managerCtaBtn managerCtaBtn--primary" to="/consult">
+                      내 마이페이지 보기
+                    </Link>
+                  ) : (
+                    <Link className="managerCtaBtn managerCtaBtn--primary" to="/login?returnTo=/consult">
+                      로그인하고 상담 신청
+                    </Link>
+                  )}
+                </div>
+              </section>
 
               {totalPages > 1 ? (
                 <nav className="managerPagination" aria-label="페이지">

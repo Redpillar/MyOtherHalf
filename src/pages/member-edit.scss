@@ -1,0 +1,88 @@
+.memberEditPage {
+  min-height: 100vh;
+  background: #fff;
+}
+
+.memberEditInner {
+  max-width: 720px;
+}
+
+.memberEditIntro {
+  margin: -10px 0 24px;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(15, 23, 42, 0.58);
+}
+
+.memberEditSaveHint {
+  margin: 0;
+  padding: 12px 0 16px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.memberEditSaveOk {
+  color: #047857;
+}
+
+.memberEditTextarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 140px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  font: inherit;
+  line-height: 1.6;
+  color: rgba(15, 23, 42, 0.88);
+  box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+    border-color: rgba(110, 142, 251, 0.9);
+    box-shadow: 0 0 0 3px rgba(110, 142, 251, 0.12);
+  }
+}
+
+.memberEditReadonlyInput {
+  color: rgba(15, 23, 42, 0.52);
+  cursor: default;
+}
+
+.memberEditReadonlySelect {
+  color: rgba(15, 23, 42, 0.52);
+  cursor: default;
+  background: rgba(248, 250, 252, 0.85);
+}
+
+.memberEditFieldHint {
+  margin: 8px 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(15, 23, 42, 0.48);
+}
+
+.memberEditCheckboxRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.5;
+  color: rgba(15, 23, 42, 0.82);
+
+  input {
+    margin-top: 2px;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+}
+
+.memberEditActions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-top: 22px;
+}

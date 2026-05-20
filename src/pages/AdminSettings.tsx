@@ -14,16 +14,17 @@ export function AdminSettings() {
   const token = useAdminToken()
   const prefs = useAdminUiSettings()
 
-  const persist = (next: AdminUiSettings) => {
-    saveAdminUiSettings(next)
+  const persist = async (next: AdminUiSettings) => {
+    if (!token) return
+    await saveAdminUiSettings(next, token)
   }
 
   const onToggleCompact = (e: FormEvent<HTMLInputElement>) => {
-    persist({ ...prefs, compactMemberTable: e.currentTarget.checked })
+    void persist({ ...prefs, compactMemberTable: e.currentTarget.checked })
   }
 
   const onToggleConfirmLogout = (e: FormEvent<HTMLInputElement>) => {
-    persist({ ...prefs, confirmBeforeLogout: e.currentTarget.checked })
+    void persist({ ...prefs, confirmBeforeLogout: e.currentTarget.checked })
   }
 
   return (
@@ -38,7 +39,7 @@ export function AdminSettings() {
             <h1 className="adminTitle">관리자 설정</h1>
             <p className="adminHint muted">
               <strong>관리자 메뉴</strong>와 <strong>메인 사이트 헤더</strong> 링크는 각 설정 페이지에서 켜고 끌 수 있습니다. 아래 옵션은 이
-              브라우저에만 저장됩니다.
+              서비스에 저장됩니다.
             </p>
           </div>
 
@@ -80,7 +81,7 @@ export function AdminSettings() {
           )}
 
           <p className="adminBack">
-            <Link to="/">← 메인으로</Link>
+            <Link to="/admin/dashboard">← 관리자 홈</Link>
           </p>
         </div>
       </main>

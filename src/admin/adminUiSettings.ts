@@ -1,6 +1,5 @@
 import { useSyncExternalStore } from 'react'
 
-const STORAGE_KEY = 'demo_admin_ui_settings'
 const EVT = 'demo-admin-ui-settings'
 
 /** 로그아웃 상태 상단 메뉴 */
@@ -21,6 +20,10 @@ export type AdminMenuWhenLoggedIn = {
   settings: boolean
   /** `/admin/inquiries` 1:1 문의 관리 */
   inquiries: boolean
+  /** `/admin/notices` 공지사항 관리 */
+  notices: boolean
+  /** `/admin/reviews` 커플 후기 관리 */
+  reviews: boolean
   /** `/admin/recommendations` 랜딩 추천 문구 */
   recommendations: boolean
   /** `/admin/menu-settings` */
@@ -47,6 +50,8 @@ const DEFAULT_MENU_LOGGED_IN: AdminMenuWhenLoggedIn = {
   managerRegister: true,
   settings: true,
   inquiries: true,
+  notices: true,
+  reviews: true,
   recommendations: true,
   menuSettings: true,
   logout: true,
@@ -79,67 +84,83 @@ function mergeMenuLoggedIn(o: unknown): AdminMenuWhenLoggedIn {
     settings: x.settings !== false,
     menuSettings: x.menuSettings !== false,
     inquiries: x.inquiries !== false,
+    notices: x.notices !== false,
+    reviews: x.reviews !== false,
     recommendations: x.recommendations !== false,
     logout: x.logout !== false,
   }
 }
 
-function readFromStorage(): AdminUiSettings {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return { ...DEFAULTS, menuWhenLoggedOut: { ...DEFAULT_MENU_LOGGED_OUT }, menuWhenLoggedIn: { ...DEFAULT_MENU_LOGGED_IN } }
-    const o = JSON.parse(raw) as Partial<AdminUiSettings> & {
-      menuWhenLoggedOut?: unknown
-      menuWhenLoggedIn?: unknown
-    }
-    return {
-      compactMemberTable: Boolean(o.compactMemberTable),
-      confirmBeforeLogout: Boolean(o.confirmBeforeLogout),
-      menuWhenLoggedOut: mergeMenuLoggedOut(o.menuWhenLoggedOut),
-      menuWhenLoggedIn: mergeMenuLoggedIn(o.menuWhenLoggedIn),
-    }
-  } catch {
-    return { ...DEFAULTS, menuWhenLoggedOut: { ...DEFAULT_MENU_LOGGED_OUT }, menuWhenLoggedIn: { ...DEFAULT_MENU_LOGGED_IN } }
+/** 모듈 스냅샷 — `useSyncExternalStore`는 참조/값이 안 바뀐 것과 동일한 스냅샷을 기대합니다. */
+let snapshot: AdminUiSettings = { ...DEFAULTS }
+
+function setSnapshot(next: AdminUiSettings) {
+  snapshot = {
+    ...next,
+    menuWhenLoggedOut: { ...next.menuWhenLoggedOut },
+    menuWhenLoggedIn: { ...next.menuWhenLoggedIn },
+  }
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(EVT))
+}
+
+async function fetchFromServer(): Promise<AdminUiSettings> {
+  const r = await fetch('/api/admin/ui-settings')
+  if (!r.ok) throw new Error('failed')
+  const j = (await r.json()) as { settings?: unknown }
+  const o = (j.settings || {}) as Partial<AdminUiSettings> & {
+    menuWhenLoggedOut?: unknown
+    menuWhenLoggedIn?: unknown
+  }
+  return {
+    compactMemberTable: Boolean(o.compactMemberTable),
+    confirmBeforeLogout: Boolean(o.confirmBeforeLogout),
+    menuWhenLoggedOut: mergeMenuLoggedOut(o.menuWhenLoggedOut),
+    menuWhenLoggedIn: mergeMenuLoggedIn(o.menuWhenLoggedIn),
   }
 }
 
-/** 모듈 스냅샷 — `useSyncExternalStore`는 참조/값이 안 바뀐 것과 동일한 스냅샷을 기대합니다. */
-let snapshot: AdminUiSettings = typeof window !== 'undefined' ? readFromStorage() : { ...DEFAULTS }
-
-function syncSnapshotFromStorage() {
-  snapshot = readFromStorage()
+export async function refreshAdminUiSettings() {
+  try {
+    const next = await fetchFromServer()
+    setSnapshot(next)
+  } catch {
+    // ignore (offline/dev)
+  }
 }
 
 export function loadAdminUiSettings(): AdminUiSettings {
   return snapshot
 }
 
-export function saveAdminUiSettings(next: AdminUiSettings) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-  snapshot = {
-    ...next,
-    menuWhenLoggedOut: { ...next.menuWhenLoggedOut },
-    menuWhenLoggedIn: { ...next.menuWhenLoggedIn },
+export async function saveAdminUiSettings(next: AdminUiSettings, token: string) {
+  const r = await fetch('/api/admin/ui-settings', {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(next),
+  })
+  if (!r.ok) throw new Error('저장에 실패했습니다.')
+  const j = (await r.json()) as { settings?: unknown }
+  const o = (j.settings || next) as Partial<AdminUiSettings> & {
+    menuWhenLoggedOut?: unknown
+    menuWhenLoggedIn?: unknown
   }
-  window.dispatchEvent(new Event(EVT))
+  const merged: AdminUiSettings = {
+    compactMemberTable: Boolean(o.compactMemberTable),
+    confirmBeforeLogout: Boolean(o.confirmBeforeLogout),
+    menuWhenLoggedOut: mergeMenuLoggedOut(o.menuWhenLoggedOut),
+    menuWhenLoggedIn: mergeMenuLoggedIn(o.menuWhenLoggedIn),
+  }
+  setSnapshot(merged)
 }
 
 export function subscribeAdminUiSettings(callback: () => void) {
-  const onEvt = () => {
-    syncSnapshotFromStorage()
-    callback()
-  }
-  const onStorage = (e: StorageEvent) => {
-    if (e.key === STORAGE_KEY) {
-      syncSnapshotFromStorage()
-      callback()
-    }
-  }
+  const onEvt = () => callback()
   window.addEventListener(EVT, onEvt)
-  window.addEventListener('storage', onStorage)
   return () => {
     window.removeEventListener(EVT, onEvt)
-    window.removeEventListener('storage', onStorage)
   }
 }
 
@@ -151,3 +172,6 @@ function getServerSnapshot(): AdminUiSettings {
 export function useAdminUiSettings(): AdminUiSettings {
   return useSyncExternalStore(subscribeAdminUiSettings, loadAdminUiSettings, getServerSnapshot)
 }
+
+// kick off an initial fetch on the client
+if (typeof window !== 'undefined') void refreshAdminUiSettings()

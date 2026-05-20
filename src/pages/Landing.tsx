@@ -6,12 +6,87 @@ import { apiFetch, readJsonResponse } from '../lib/apiFetch'
 import { useMemberSession } from '../lib/memberSession'
 import type { RecommendTone, RecommendationItem } from '../lib/recommendationTypes'
 import { LandingPostRecommendSections } from '../components/LandingPostRecommendSections'
+import { LandingReviewsSection } from '../components/LandingReviewsSection'
 import './landing.scss'
 
 const RECOMMEND_TONES: RecommendTone[] = ['gray', 'blue', 'pink', 'purple', 'slate']
 
 function isRecommendTone(t: string): t is RecommendTone {
   return (RECOMMEND_TONES as readonly string[]).includes(t)
+}
+
+const MATCHING_STEPS = [
+  {
+    title: '회원가입',
+    body: '프로필을 꼼꼼하게 작성할수록 더 자연스럽고 정확한 매칭이 가능해져요.',
+  },
+  {
+    title: '매니저 상담',
+    body: '매니저와의 상담을 통해 나에게 맞는 이상형을 함께 찾아갑니다.',
+  },
+  {
+    title: '매칭 진행',
+    body: '매칭부터 실제 만남까지 자연스럽게 이어질 수 있도록 세심하게 진행해드립니다.',
+  },
+] as const
+
+function HowStepIcon({ step }: { step: number }) {
+  const common = { width: 34, height: 34, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.75 }
+
+  if (step === 0) {
+    return (
+      <svg
+        {...common}
+        width={22}
+        height={22}
+        className="howStepIcon"
+        fill="currentColor"
+        stroke="none"
+        aria-hidden="true"
+      >
+        <path d="M11,14H5a5.006,5.006,0,0,0-5,5v5H3V19a2,2,0,0,1,2-2h6a2,2,0,0,1,2,2v5h3V19A5.006,5.006,0,0,0,11,14Z" />
+        <path d="M8,12A6,6,0,1,0,2,6,6.006,6.006,0,0,0,8,12ZM8,3A3,3,0,1,1,5,6,3,3,0,0,1,8,3Z" />
+        <path d="M21 10V7H18V10H15V13H18V16H21V13H24V10Z" />
+      </svg>
+    )
+  }
+
+  if (step === 1) {
+    return (
+      <svg
+        className="howStepIcon"
+        width={34}
+        height={34}
+        viewBox="0 0 24 20"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2.25}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M4.75 7.75 6.75 9.75 10.25 6.25" />
+        <path d="M12.25 7.75H19.25" />
+        <path d="M4.75 13.75 6.75 15.75 10.25 12.25" />
+        <path d="M12.25 13.75H19.25" />
+      </svg>
+    )
+  }
+
+  return (
+    <svg
+      {...common}
+      width={24}
+      height={24}
+      className="howStepIcon"
+      fill="currentColor"
+      stroke="none"
+      style={{ transform: 'translateX(5px)' }}
+      aria-hidden="true"
+    >
+      <path d="M3,3H13v2.384c.06-.068,.107-.144,.172-.209,.757-.758,1.761-1.175,2.827-1.175h0V0H0V21c0,1.657,1.343,3,3,3H13c1.657,0,3-1.343,3-3v-3H3V3Zm2.999,17h4v2.015H5.999v-2.015ZM21.999,6.001h-6c-1.1,0-2,.9-1.999,2l.002,7.911c0,.858,.949,1.378,1.672,.915l2.826-1.827h5.5v-6.999c0-1.105-.896-2-2.001-2Zm-2.999,7.5s-3-2.122-3-3.85c0-.911,.672-1.65,1.5-1.65s1.5,.739,1.5,1.65c0-.911,.672-1.65,1.5-1.65s1.5,.739,1.5,1.65c0,1.728-3,3.85-3,3.85Z" />
+    </svg>
+  )
 }
 
 function RecommendAvatar({ tone }: { tone: RecommendTone }) {
@@ -29,58 +104,11 @@ const REC_CARD_WIDTH_PX = 265
 const REC_GAP_PX = 10
 const REC_SLOT_PX = REC_CARD_WIDTH_PX + REC_GAP_PX
 
-const COUPLE_REVIEW_CARDS = [
-  {
-    title: '첫 만남이 두 번째 약속으로',
-    label: '내반쪽 만남후기',
-    sublabel: '내반쪽 커플후기♥',
-    tone: 'peach',
-    messages: [
-      { side: 'left', text: '오늘 분위기 너무 편해서 시간 가는 줄 몰랐어요 :)' },
-      { side: 'right', text: '저도요! 다음엔 제가 맛집 예약할게요.' },
-      { side: 'left', text: '이번 주말 저녁 괜찮으세요?' },
-      { side: 'right', text: '좋아요. 벌써 기대돼요!' },
-    ],
-  },
-  {
-    title: '서툴렀던 대화가 설렘으로',
-    label: '내반쪽 만남후기',
-    sublabel: '내반쪽 커플후기♥',
-    tone: 'sky',
-    messages: [
-      { side: 'left', text: '처음엔 긴장했는데 편하게 리드해 주셔서 감사했어요.' },
-      { side: 'right', text: '저도 대화가 잘 통해서 집 가는 길이 아쉬웠어요.' },
-      { side: 'right', text: '다음에는 전시회 같이 가요!' },
-      { side: 'left', text: '좋아요. 일정 바로 맞춰볼게요.' },
-    ],
-  },
-  {
-    title: '자연스럽게 이어진 연락',
-    label: '내반쪽 만남후기',
-    sublabel: '내반쪽 커플후기♥',
-    tone: 'mint',
-    messages: [
-      { side: 'left', text: '오늘 이야기한 산책 코스, 진짜 같이 가보고 싶어요.' },
-      { side: 'right', text: '그 말 하려던 참이었어요 ㅎㅎ' },
-      { side: 'right', text: '다음 주에 시간 맞추면 어떨까요?' },
-      { side: 'left', text: '좋죠. 저녁까지 같이 보내요!' },
-    ],
-  },
-  {
-    title: '만남 이후 더 커진 확신',
-    label: '내반쪽 만남후기',
-    sublabel: '내반쪽 커플후기♥',
-    tone: 'gold',
-    messages: [
-      { side: 'left', text: '매니저님 덕분에 좋은 분을 만난 것 같아요.' },
-      { side: 'right', text: '저도 정말 같은 마음이에요.' },
-      { side: 'left', text: '다음엔 조금 더 길게 데이트해요.' },
-      { side: 'right', text: '좋아요. 우리 천천히 오래 봐요.' },
-    ],
-  },
-] as const
-
-const PRODUCT_ITEMS = [
+const PRODUCT_ITEMS: ReadonlyArray<{
+  name: string
+  desc: string
+  note?: string
+}> = [
   {
     name: '블라인드',
     desc: '대화 속에서 진짜 매력을 발견하고 싶은 분들께 추천',
@@ -102,7 +130,7 @@ const PRODUCT_ITEMS = [
     name: '스페셜 만남권',
     desc: '횟수 제한 없이 교제할 때까지 마음 편하게 소개팅을 진행하고 싶은 분들께 추천',
   },
-] as const
+]
 
 function cardsPerViewForWidth(width: number): number {
   if (width <= 640) return 1
@@ -119,28 +147,36 @@ function estimateCarouselMeta(width: number, itemCount: number) {
   return { n, short }
 }
 
-/** 보이는 n칸의 가운데가 패드 가로 중앙에 오도록 이동량(px, 왼쪽으로 양수). */
+/** 보이는 n칸의 가운데가 뷰포트 가로 중앙에 오도록 이동량(px, 왼쪽으로 양수). */
 function recommendTrackTransform(
   recommendIdx: number,
-  padWidth: number,
+  viewportWidth: number,
+  slotWidth: number,
+  trackInsetLeft: number,
   n: number,
   short: boolean,
   recLen: number,
 ): string | undefined {
-  if (short || recLen === 0) return undefined
-  if (padWidth <= 0) return `translateX(-${recommendIdx * REC_SLOT_PX}px)`
-  const d = recommendIdx * REC_SLOT_PX + (n * REC_SLOT_PX) / 2 - padWidth / 2
+  if (short || recLen === 0 || slotWidth <= 0) return undefined
+  if (viewportWidth <= 0) return `translateX(-${recommendIdx * slotWidth}px)`
+  const d =
+    trackInsetLeft + recommendIdx * slotWidth + (n * slotWidth) / 2 - viewportWidth / 2
   return `translateX(-${d}px)`
 }
 
 export function Landing() {
   const member = useMemberSession()
+  const applyTo = member ? '/consult' : '/login'
+  const consultTo = '/consult'
   const [recItems, setRecItems] = useState<RecommendationItem[]>([])
   const [recLoadError, setRecLoadError] = useState<string | null>(null)
   const [recommendIdx, setRecommendIdx] = useState(0)
+  const mainRef = useRef<HTMLElement | null>(null)
   const viewportRef = useRef<HTMLDivElement>(null)
   const [carousel, setCarousel] = useState({ n: 3, short: true })
-  const [padWidth, setPadWidth] = useState(0)
+  const [viewportWidth, setViewportWidth] = useState(0)
+  const [slotWidth, setSlotWidth] = useState(REC_SLOT_PX)
+  const [trackInsetLeft, setTrackInsetLeft] = useState(0)
   const [noTrans, setNoTrans] = useState(false)
   const [reduceMotion, setReduceMotion] = useState(false)
 
@@ -195,15 +231,24 @@ export function Landing() {
     const vp = viewportRef.current
     if (!vp || recItems.length === 0) {
       setCarousel({ n: 3, short: true })
-      setPadWidth(0)
+      setViewportWidth(0)
+      setSlotWidth(REC_SLOT_PX)
+      setTrackInsetLeft(0)
       return
     }
 
     const measure = () => {
-      const inner = vp.querySelector('.recommendViewportPad') as HTMLElement | null
-      const pad = inner?.clientWidth ?? 0
-      setPadWidth(pad)
       const w = vp.getBoundingClientRect().width
+      const pad = vp.querySelector('.recommendViewportPad') as HTMLElement | null
+      const slide = vp.querySelector('.recommendSlide') as HTMLElement | null
+      const track = vp.querySelector('.recommendTrack') as HTMLElement | null
+      const card = slide?.querySelector('.recommendCard') as HTMLElement | null
+      const cardW = card?.getBoundingClientRect().width ?? REC_CARD_WIDTH_PX
+      const gap = track ? Number.parseFloat(getComputedStyle(track).gap) || REC_GAP_PX : REC_GAP_PX
+      const inset = pad ? Number.parseFloat(getComputedStyle(pad).paddingLeft) || 0 : 0
+      setViewportWidth(w)
+      setSlotWidth(cardW + gap)
+      setTrackInsetLeft(inset)
       const n = cardsPerViewForWidth(w)
       const short = recItems.length <= n
       setCarousel({ n, short })
@@ -241,60 +286,146 @@ export function Landing() {
     return () => window.clearInterval(t)
   }, [recItems.length, carousel.short, reduceMotion])
 
+  useEffect(() => {
+    const root = mainRef.current
+    if (!root) return
+
+    const markVisible = (el: HTMLElement) => {
+      el.setAttribute('data-visible', 'true')
+    }
+
+    if (reduceMotion) {
+      root.querySelectorAll<HTMLElement>('[data-landing-reveal]').forEach(markVisible)
+      return
+    }
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) markVisible(e.target as HTMLElement)
+        }
+      },
+      { threshold: 0.08, rootMargin: '0px 0px -12% 0px' },
+    )
+
+    const observeNew = () => {
+      root.querySelectorAll<HTMLElement>('[data-landing-reveal]:not([data-visible])').forEach((el) => {
+        io.observe(el)
+      })
+    }
+
+    observeNew()
+    const mo = new MutationObserver(observeNew)
+    mo.observe(root, { childList: true, subtree: true })
+
+    return () => {
+      io.disconnect()
+      mo.disconnect()
+    }
+  }, [reduceMotion])
+
   const trackTransform = useMemo(
-    () => recommendTrackTransform(recommendIdx, padWidth, carousel.n, carousel.short, recItems.length),
-    [recommendIdx, padWidth, carousel.n, carousel.short, recItems.length],
+    () =>
+      recommendTrackTransform(
+        recommendIdx,
+        viewportWidth,
+        slotWidth,
+        trackInsetLeft,
+        carousel.n,
+        carousel.short,
+        recItems.length,
+      ),
+    [
+      recommendIdx,
+      viewportWidth,
+      slotWidth,
+      trackInsetLeft,
+      carousel.n,
+      carousel.short,
+      recItems.length,
+    ],
   )
 
   return (
     <div className="landing">
       <SiteHeader />
 
-      <main>
+      <main
+        ref={(el) => {
+          mainRef.current = el
+        }}
+      >
         <section className="heroSection" id="top">
-          <div className="heroBackdrop" aria-hidden="true" />
-          <div className="container heroInner">
-            <div className="heroGrid">
-              <article className="heroCard">
-                <div className="heroIcon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24">
-                    <path
-                      d="M16 11c1.66 0 3-1.79 3-4s-1.34-4-3-4-3 1.79-3 4 1.34 4 3 4Zm-8 0c1.66 0 3-1.79 3-4S9.66 3 8 3 5 4.79 5 7s1.34 4 3 4Zm0 2c-2.33 0-7 1.17-7 3.5V21h14v-4.5C15 14.17 10.33 13 8 13Zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V21h6v-4.5c0-2.33-4.67-3.5-7-3.5Z"
-                      fill="currentColor"
-                    />
+          <div className="heroSplit">
+            <article className="heroPane heroPane--blue">
+              <div className="heroPaneMedia" aria-hidden="true">
+                <img
+                  className="heroPaneMediaImg heroPaneMediaImg--photo"
+                  src="/hero/manager-bg.png"
+                  alt=""
+                  width={1024}
+                  height={576}
+                  loading="eager"
+                  decoding="async"
+                />
+                <div className="heroPaneMediaOverlay" />
+              </div>
+              <div className="heroPaneContent">
+                <div className="heroPaneIcon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="40" height="40" fill="currentColor">
+                    <path d="M16 11c1.66 0 3-1.79 3-4s-1.34-4-3-4-3 1.79-3 4 1.34 4 3 4Zm-8 0c1.66 0 3-1.79 3-4S9.66 3 8 3 5 4.79 5 7s1.34 4 3 4Zm0 2c-2.33 0-7 1.17-7 3.5V21h14v-4.5C15 14.17 10.33 13 8 13Zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V21h6v-4.5c0-2.33-4.67-3.5-7-3.5Z" />
                   </svg>
                 </div>
-                <h1>
-                  카톡으로 해주는 확실하고
+                <h1 className="heroPaneTitle">
+                  매니저와 바로 이어지는
                   <br />
-                  빠른 소개팅!
+                  빠르고 믿을 수 있는 인연!
                 </h1>
-                <Link className="btn btnGhost heroBtn" to="/join">
+                <Link className="btn heroPaneBtn heroPaneBtn--blue landingImpactBtn landingImpactBtn--ghost" to={applyTo}>
                   신청하기
                 </Link>
-              </article>
+              </div>
+            </article>
 
-              <article className="heroCard heroCardAlt">
-                <div className="heroIcon talk" aria-hidden="true">
-                  <span className="talkBubble">TALK</span>
+            <article className="heroPane heroPane--pink">
+              <div className="heroPaneMedia" aria-hidden="true">
+                <picture className="heroPanePicture">
+                  <source media="(max-width: 900px)" srcSet="/hero/meet-bg-mobile.png" />
+                  <img
+                    className="heroPaneMediaImg heroPaneMediaImg--photo"
+                    src="/hero/meet-bg.png"
+                    alt=""
+                    width={1024}
+                    height={571}
+                    loading="eager"
+                    decoding="async"
+                  />
+                </picture>
+                <div className="heroPaneMediaOverlay" />
+              </div>
+              <div className="heroPaneContent">
+                <div className="heroPaneIcon heroPaneIcon--talk" aria-hidden="true">
+                  <span className="heroTalkMark">TALK</span>
                 </div>
-                <h1>
-                  만남보장형 1:1
+                <h2 className="heroPaneTitle">
+                  둘이서 직접 마주하는
                   <br />
-                  대면 소개팅!
-                </h1>
-                <Link className="btn btnGhost heroBtn" to="/join">
+                  1:1 맞춤 만남!
+                </h2>
+                <Link className="btn heroPaneBtn heroPaneBtn--pink landingImpactBtn landingImpactBtn--ghost" to={applyTo}>
                   신청하기
                 </Link>
-              </article>
-            </div>
+              </div>
+            </article>
           </div>
         </section>
 
         <section className="ctaSection">
-          <div className="container ctaInner">
-            <p className="ctaTitle">진지한 만남을 위한 부담없는 소개팅, 내반쪽</p>
-            <Link className="btn btnPrimary" to="/join">
+          <div className="ctaInner" data-landing-reveal>
+            <p className="ctaTitle">
+              진지한 만남을 위한 부담없는 소개팅, <span className="ctaTitleBrand">내반쪽</span>
+            </p>
+            <Link className="btn btnPrimary landingImpactBtn landingImpactBtn--solid" to={applyTo}>
               신청하기
             </Link>
 
@@ -304,24 +435,33 @@ export function Landing() {
 
         <section className="section aboutSection" id="guide">
           <div className="container">
-            <div className="sectionHeader center">
+            <div className="sectionHeader center" data-landing-reveal>
               <div className="eyebrow">ABOUT US</div>
-              <h2>AI가 아닌 사람이 직접 해주는 리얼 소개팅!</h2>
+              <h2>실제 만남까지 이어지는 리얼 소개팅 내반쪽!</h2>
             </div>
 
-            <div className="aboutCard">
-              <div className="aboutMedia" aria-hidden="true" />
+            <div className="aboutCard" data-landing-reveal>
+              <div className="aboutMedia">
+                <img
+                  className="aboutMediaImg"
+                  src="/about/my-other-half.png"
+                  alt="실제 만남까지 이어지는 따뜻한 소개팅 장면"
+                  width={1024}
+                  height={571}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
               <div className="aboutText">
-                <p className="aboutBrand">내반쪽</p>
+                <p className="aboutBrand">My Other Half</p>
                 <h3>내반쪽은</h3>
                 <p className="muted">
-                  앱 안에서 좋아요/채팅으로 끝나는 소개팅이 아니라, 전담 매니저와 소통하며 실제
-                  연결과 만남까지 이어지는 서비스를 지향합니다.
+                  앱 안에서 가볍게 지나가는 인연이 아닌, 매니저와의 1:1 상담을 통해 실제 성향과
+                  분위기에 맞는 상대를 연결합니다.
                 </p>
                 <p className="aboutStrong">
-                  대면 소개팅까지 가능한, 알바가 없는
-                  <br />
-                  청정 소개팅입니다!
+                  단순 매칭으로 끝나는 서비스가 아니라 카톡 연결부터 자연스러운 만남까지 직접
+                  이어지는 믿을 수 있는 소개팅을 제공합니다.
                 </p>
               </div>
             </div>
@@ -330,21 +470,30 @@ export function Landing() {
 
         <section className="section diffSection" id="guarantee">
           <div className="container">
-            <div className="sectionHeader center">
+            <div className="sectionHeader center" data-landing-reveal>
               <div className="eyebrow">WHAT&apos;S DIFFERENCE</div>
-              <h2>소개팅 앱이나 결정사와 뭐가 다를까요?</h2>
+              <h2>내반쪽은 다른 소개팅 앱이랑 뭐가 다를까요?</h2>
               <p className="muted">
-                가벼운 스침이 아닌, 진짜 인연을 만나고 싶다면 지금 새로운 만남을 시작해 보세요.
+                소개팅 앱처럼 가볍게, 결정사처럼 부담스럽게 말고 진짜 나와 맞는 사람을 만나보세요.
               </p>
             </div>
 
-            <div className="grid3 diffGrid">
+            <div className="grid3 diffGrid" data-landing-reveal>
               {[
-                { title: '전담 매니저', body: '전문 매니저가 직접 소통하며 철저한 매칭을 관리합니다.' },
-                { title: '부담 없는 비용', body: '결정사보다 부담 없는 비용으로 퀄리티 있는 매칭을 제공합니다.' },
-                { title: '만남 중심', body: '톡 연결부터 일정 조율까지 실제 만남을 중심으로 진행합니다.' },
+                {
+                  title: '1:1 매칭 케어',
+                  body: '회원님의 성향과 가치관을 바탕으로 더 잘 맞는 인연을 1:1로 세심하게 연결해드려요.',
+                },
+                {
+                  title: '부담 없는 요금',
+                  body: '누구나 편안하게 좋은 인연을 만날 수 있도록 합리적인 요금 방식으로 서비스를 이용할 수 있어요.',
+                },
+                {
+                  title: '자연스러운 연결',
+                  body: '채팅만 머무르지 않도록, 실제 인연으로 이어지는 만남이 되도록 진행해드려요.',
+                },
               ].map((card) => (
-                <div key={card.title} className="diffCard card">
+                <div key={card.title} className="diffCard">
                   <h3>{card.title}</h3>
                   <p className="muted">{card.body}</p>
                 </div>
@@ -356,43 +505,36 @@ export function Landing() {
         <section className="section howSection" id="managers">
           <div className="howBg" aria-hidden="true" />
           <div className="container">
-            <div className="sectionHeader center">
-              <div className="eyebrow">HOW TO USE</div>
-              <h2>매칭은 어떻게 진행 되나요?</h2>
+            <div className="sectionHeader center" data-landing-reveal>
+              <div className="eyebrow">HOW IT WORKS</div>
+              <h2>내반쪽의 매칭 방식이 궁금하신가요?</h2>
             </div>
 
-            <div className="grid3 howGrid">
-              {[
-                {
-                  title: '회원가입',
-                  body: '내반쪽 회원가입을 진행합니다.',
-                },
-                {
-                  title: '본인 정보 입력',
-                  body: '정보가 상세할수록 더 빠르고 정확한 소개팅이 진행됩니다.',
-                },
-                {
-                  title: '프로젝트 내용 보완',
-                  body: '매니저 상담을 통해 이상형 조건을 구체화합니다.',
-                },
-              ].map((step, idx) => (
-                <div key={step.title} className="howCard card">
-                  <div className="howIcon" aria-hidden="true">
-                    {String(idx + 1).padStart(2, '0')}
-                  </div>
-                  <h3>{step.title}</h3>
-                  <p className="muted">{step.body}</p>
-                </div>
-              ))}
+            <div className="howSteps" data-landing-reveal>
+              <ol className="howStepsList">
+                {MATCHING_STEPS.map((step, idx) => (
+                  <li key={step.title} className="howStep">
+                    <div className="howStepNode" aria-hidden="true">
+                      <span className="howStepNum">{String(idx + 1).padStart(2, '0')}</span>
+                      <HowStepIcon step={idx} />
+                    </div>
+                    <div className="howStepContent">
+                      <span className="howStepTag">STEP {String(idx + 1).padStart(2, '0')}</span>
+                      <h3>{step.title}</h3>
+                      <p className="muted">{step.body}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
             </div>
           </div>
         </section>
 
         <section className="section recommendSection" aria-labelledby="recommend-heading">
           <div className="container">
-            <div className="sectionHeader center">
-              <div className="recommendEyebrow">내반쪽</div>
-              <h2 id="recommend-heading">이런 분들께 추천드립니다!</h2>
+            <div className="sectionHeader center" data-landing-reveal>
+              <div className="recommendEyebrow">My Other Half</div>
+              <h2 id="recommend-heading">이런 분들을 위해 만들었어요</h2>
             </div>
 
             {recItems.length === 0 ? (
@@ -420,9 +562,8 @@ export function Landing() {
                       <div
                         key={carousel.short ? `rec-${s.id}` : `rec-${s.id}-${i}`}
                         className="recommendSlide"
-                        style={{ width: REC_SLOT_PX, flex: '0 0 auto' }}
                       >
-                        <div className="recommendCard" style={{ width: REC_CARD_WIDTH_PX }}>
+                        <div className="recommendCard">
                           <RecommendAvatar tone={s.tone} />
                           <p className="recommendQuote">{s.quote}</p>
                         </div>
@@ -460,73 +601,33 @@ export function Landing() {
 
         <div id="notice" style={{ scrollMarginTop: 80 }} aria-hidden="true" />
 
-        <section className="section reviewsSection" id="reviews" aria-labelledby="reviews-heading">
-          <div className="container">
-            <div className="sectionHeader center reviewsHeader">
-              <div className="reviewsEyebrow">내반쪽 커플 후기</div>
-              <h2 id="reviews-heading">이곳에서 시작된 인연, 그리고 진짜 사랑 이야기</h2>
-              <p className="muted reviewsLead">
-                단순한 매칭이 아니라, 진짜 인연을 이어드립니다.
-                <br />
-                내반쪽에서는 실제 회원분들의 리얼 후기가 꾸준히 이어지고 있습니다.
-              </p>
-              <p className="muted reviewsStory">
-                처음은 어색했지만 점점 스며든 따뜻한 감정, 설렘으로 바뀐 두 번째 약속,
-                <br />
-                서로 다른 두 사람이 하나의 인연으로 이어진 순간들을 담았습니다.
-              </p>
-            </div>
-
-            <div className="reviewsGrid">
-              {COUPLE_REVIEW_CARDS.map((card) => (
-                <article key={card.title} className={`reviewStoryCard reviewStoryCard--${card.tone}`}>
-                  <div className="reviewChatFrame">
-                    <div className="reviewChatTop">
-                      <span className="reviewChatAvatar" aria-hidden="true" />
-                      <div>
-                        <p className="reviewChatName">{card.title}</p>
-                        <p className="reviewChatMeta">실제 회원 대화 일부</p>
-                      </div>
-                    </div>
-                    <div className="reviewChatBody">
-                      {card.messages.map((message, idx) => (
-                        <p key={`${card.title}-${idx}`} className={`reviewBubble reviewBubble--${message.side}`}>
-                          {message.text}
-                        </p>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="reviewCardText">
-                    <p className="reviewCardLabel">{card.label}</p>
-                    <p className="reviewCardSubLabel">{card.sublabel}</p>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
+        <LandingReviewsSection />
 
         <section className="section productSection" id="products" aria-labelledby="product-heading">
           <div className="container productInner">
-            <div className="sectionHeader center productHeader">
+            <div className="sectionHeader center productHeader" data-landing-reveal>
               <div className="productEyebrow">내반쪽 상품</div>
               <h2 id="product-heading">회원님의 상황에 맞는 5가지 상품</h2>
               <p className="muted productLead">
-                금액대별, 서비스별 5가지의 매칭 상품이 준비되어 있습니다.
+                만남 스타일과 예산에 맞춰 선택할 수 있습니다.
                 <br />
-                매니저와의 상담을 통해 나에게 맞는 상품을 추천해드립니다.
+                전담 매니저 상담 후, 회원님께 맞는 상품을 안내해 드립니다.
               </p>
             </div>
 
-            <div className="productList" role="list" aria-label="매칭 상품 설명">
-              {PRODUCT_ITEMS.map((item) => (
-                <article key={item.name} className="productItem" role="listitem">
-                  <div className="productPill">
-                    <span>{item.name}</span>
-                    {item.note ? <small>{item.note}</small> : null}
+            <div className="productList" role="list" aria-label="매칭 상품 설명" data-landing-reveal>
+              {PRODUCT_ITEMS.map((item, index) => (
+                <article key={item.name} className="productItem card" role="listitem">
+                  <span className="productItemIndex" aria-hidden="true">
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                  <div className="productItemBody">
+                    <h3 className="productItemTitle">
+                      <span className="productItemName">{item.name}</span>
+                      {item.note ? <span className="productItemNote">{item.note}</span> : null}
+                    </h3>
+                    <p className="productDesc">{item.desc}</p>
                   </div>
-                  <p className="productDesc">{item.desc}</p>
                 </article>
               ))}
             </div>
@@ -535,7 +636,7 @@ export function Landing() {
 
         <section className="bottomCtaSection" aria-labelledby="bottom-cta-heading">
           <div className="container">
-            <div className="bottomCtaPanel">
+            <div className="bottomCtaPanel" data-landing-reveal>
               <div className="bottomCtaBackdrop" aria-hidden="true">
                 <div className="bottomCtaGlow bottomCtaGlow--left" />
                 <div className="bottomCtaGlow bottomCtaGlow--right" />
@@ -543,62 +644,67 @@ export function Landing() {
               </div>
 
               <div className="bottomCtaContent">
-                <p className="bottomCtaEyebrow">내반쪽 프리미엄 매칭</p>
+                <p className="bottomCtaEyebrow">My Other Heart</p>
                 <h2 id="bottom-cta-heading" className="bottomCtaTitle">
-                  지금 이 순간에도 새로운 인연은
+                  진지한 만남,
                   <br />
-                  계속 이어지고 있습니다.
+                  누구나 쉽게 지금 시작할 수 있습니다.
                 </h2>
                 <p className="bottomCtaLead">
-                  최고의 전담 매칭 서비스를 통해 당신의 인연을 만들어 보세요.
+                  검증된 회원과 전담 매니저가 함께하는 1:1 맞춤 매칭.
+                  <br />
+                  처음이어도 괜찮습니다. 상담부터 차근차근 안내해 드립니다.
                 </p>
                 <p className="bottomCtaBody">
-                  상담은 무료! 5분의 투자가
+                  상담은 무료입니다.
                   <br />
-                  당신의 평생의 인연을 만들 수도 있습니다.
+                  지금 신청하시면 전담 매니저가 연락드려
+                  <br />
+                  회원님께 맞는 만남 방식을 함께 정해 드립니다.
                 </p>
-                <Link className="btn btnPrimary bottomCtaButton" to="/join">
-                  무료 상담 신청
+                <Link className="btn btnPrimary bottomCtaButton landingImpactBtn landingImpactBtn--solid" to={consultTo}>
+                  마이페이지
                 </Link>
               </div>
             </div>
           </div>
         </section>
 
-        <footer className="footer" id="contact">
-          <div className="container footerInner">
-            <div>
-              <div className="brand footerBrand">
-                <span className="brandMark" aria-hidden="true" />
-                <span className="brandName">내반쪽</span>
-              </div>
-              <p className="muted">
-                상담은 무료! 5분의 투자로
-                <br />
-                새로운 인연을 시작해 보세요.
-              </p>
-            </div>
-
-            <div className="footerCta">
-              <Link className="btn btnPrimary" to="/join">
-                무료 상담 신청
-              </Link>
-              <Link className="btn btnGhost" to={member ? '/inquiry' : '/inquiry/new'} style={{ marginTop: 10 }}>
-                1:1 문의 남기기
-              </Link>
-              <p className="muted tiny">
-                회사명: 내반쪽 Co. | Email: contact@example.com
-                <br />
-                <Link to="/admin" className="muted tiny" style={{ fontWeight: 700 }}>
-                  관리자
-                </Link>
-                {' · '}
-                Copyright © {new Date().getFullYear()} 내반쪽.
-              </p>
-            </div>
-          </div>
-        </footer>
       </main>
+
+      <footer className="footer" id="contact">
+        <div className="container footerInner">
+          <div className="footerColBrand">
+            <div className="brand footerBrand">
+              <span className="brandMark" aria-hidden="true" />
+              <span className="brandName">내반쪽</span>
+            </div>
+            <p className="muted footerTagline">
+              상담은 무료! 5분의 투자로
+              <br />
+              새로운 인연을 시작해 보세요.
+            </p>
+          </div>
+
+          <div className="footerCta">
+            <Link className="btn btnPrimary" to={consultTo}>
+              마이페이지
+            </Link>
+            <Link className="btn btnGhost" to={member ? '/inquiry' : '/inquiry/new'}>
+              1:1 문의 남기기
+            </Link>
+            <p className="muted tiny footerMeta">
+              회사명: 내반쪽 Co. | Email: contact@example.com
+              <br />
+              <Link to="/admin" className="footerAdminLink">
+                관리자
+              </Link>
+              {' · '}
+              Copyright © {new Date().getFullYear()} 내반쪽.
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }

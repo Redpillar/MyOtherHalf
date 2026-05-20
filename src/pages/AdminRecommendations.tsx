@@ -1,8 +1,9 @@
-import { type DragEvent, type FormEvent, useCallback, useEffect, useRef, useState } from 'react'
+import { type DragEvent, useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import type { RecommendTone, RecommendationItem } from '../lib/recommendationTypes'
+import type { RecommendationItem } from '../lib/recommendationTypes'
 import { clearAdminToken, useAdminToken } from '../admin/adminSession'
-import { AdminMenu } from '../components/AdminMenu'
+import { AdminPager } from '../components/AdminPager'
+import { usePagination } from '../components/AdminPagination'
 import { SiteHeader } from '../components/SiteHeader'
 import { apiFetch, readJsonResponse } from '../lib/apiFetch'
 import './admin.scss'
@@ -20,14 +21,6 @@ function apiErrorMessage(r: Response, j: { error?: string; path?: string }, fall
   return msg
 }
 
-const TONE_OPTIONS: { value: RecommendTone; label: string }[] = [
-  { value: 'slate', label: 'slate' },
-  { value: 'gray', label: 'gray' },
-  { value: 'blue', label: 'blue' },
-  { value: 'pink', label: 'pink' },
-  { value: 'purple', label: 'purple' },
-]
-
 const DND_MIME = 'application/x-demo-rec-id'
 
 export function AdminRecommendations() {
@@ -38,12 +31,11 @@ export function AdminRecommendations() {
 
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [quote, setQuote] = useState('')
-  const [tone, setTone] = useState<RecommendTone>('gray')
-  const [saving, setSaving] = useState(false)
   const [orderSaving, setOrderSaving] = useState(false)
   const [dragId, setDragId] = useState<number | null>(null)
   const [overId, setOverId] = useState<number | null>(null)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(20)
 
   const load = useCallback(async () => {
     const t = token
@@ -63,6 +55,7 @@ export function AdminRecommendations() {
       }
       if (!r.ok) throw new Error(apiErrorMessage(r, j, '목록을 불러오지 못했습니다.'))
       setItems(Array.isArray(j.items) ? j.items : [])
+      setPage(1)
     } catch (e) {
       setError(e instanceof Error ? e.message : '연결을 확인해 주세요.')
       setItems([])
@@ -123,42 +116,6 @@ export function AdminRecommendations() {
     },
     [persistOrder],
   )
-
-  const onAdd = async (e: FormEvent) => {
-    e.preventDefault()
-    const t = token
-    if (!t) return
-    const q = quote.trim()
-    if (!q) {
-      setError('문구를 입력해 주세요.')
-      return
-    }
-    setSaving(true)
-    setError(null)
-    try {
-      const r = await apiFetch('/api/admin/recommendations', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${t}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ quote: q, tone }),
-      })
-      const j = await readJsonResponse<{ item?: RecommendationItem; error?: string; path?: string }>(r)
-      if (r.status === 401) {
-        clearAdminToken()
-        setError('세션이 만료되었습니다. 다시 로그인해 주세요.')
-        return
-      }
-      if (!r.ok) throw new Error(apiErrorMessage(r, j, '추가하지 못했습니다.'))
-      setQuote('')
-      await load()
-    } catch (e) {
-      setError(e instanceof Error ? e.message : '연결을 확인해 주세요.')
-    } finally {
-      setSaving(false)
-    }
-  }
 
   const onDelete = async (id: number) => {
     const t = token
@@ -228,19 +185,18 @@ export function AdminRecommendations() {
     applyReorder(fromId, targetId)
   }
 
+  const pager = usePagination(items, page, pageSize)
+
   return (
     <div className="adminPage">
       <SiteHeader />
 
       <main className="adminMain">
         <div className="container adminInner">
-          <AdminMenu />
-
           <div className="adminHead">
             <h1 className="adminTitle">랜딩 추천 문구</h1>
             <p className="adminHint muted">
-              메인 페이지 「이런 분들께 추천드립니다」 캐러셀에 노출되는 문구를 추가·삭제합니다. 행을 드래그하면 순서를 바꿀 수
-              있습니다.
+              메인 페이지 「이런 분들께 추천드립니다」 캐러셀에 노출되는 문구를 관리합니다. 행을 드래그하면 순서를 바꿀 수 있습니다.
             </p>
           </div>
 
@@ -250,45 +206,18 @@ export function AdminRecommendations() {
             </p>
           ) : (
             <>
-              <form className="adminSettingsCard card" style={{ marginBottom: 20 }} onSubmit={(ev) => void onAdd(ev)}>
-                <h2 className="adminSettingsSectionTitle">문구 추가</h2>
-                <label className="adminLabel" htmlFor="rec-quote">
-                  문구
-                </label>
-                <textarea
-                  id="rec-quote"
-                  className="adminDetailTextarea"
-                  rows={4}
-                  value={quote}
-                  onChange={(e) => setQuote(e.target.value)}
-                  maxLength={800}
-                  placeholder="추천 카드에 표시할 문구"
-                />
-                <label className="adminLabel" htmlFor="rec-tone" style={{ marginTop: 12 }}>
-                  카드 색(톤)
-                </label>
-                <select
-                  id="rec-tone"
-                  className="adminPwInput"
-                  value={tone}
-                  onChange={(e) => setTone(e.target.value as RecommendTone)}
-                >
-                  {TONE_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
-                <button type="submit" className="submitBtn adminLoginBtn" style={{ marginTop: 16 }} disabled={saving}>
-                  {saving ? '저장 중…' : '추가'}
-                </button>
-              </form>
-
               <div className="adminToolbar">
                 <span className="adminCount">
                   총 <strong>{items.length}</strong>건
                   {orderSaving ? <span className="muted"> · 순서 저장 중…</span> : null}
                 </span>
+                <Link
+                  to="/admin/recommendations/new"
+                  className="btnGhost"
+                  style={{ textDecoration: 'none', fontWeight: 900, padding: '8px 14px', borderRadius: 10 }}
+                >
+                  + 문구 추가
+                </Link>
                 <button type="button" className="linkBtn adminRefresh" onClick={() => void load()}>
                   새로고침
                 </button>
@@ -308,14 +237,14 @@ export function AdminRecommendations() {
                     </tr>
                   </thead>
                   <tbody>
-                    {items.length === 0 ? (
+                    {pager.total === 0 ? (
                       <tr>
                         <td colSpan={5} className="adminEmpty">
                           등록된 문구가 없습니다.
                         </td>
                       </tr>
                     ) : (
-                      items.map((row) => (
+                      pager.pageItems.map((row) => (
                         <tr
                           key={row.id}
                           draggable
@@ -343,13 +272,28 @@ export function AdminRecommendations() {
                   </tbody>
                 </table>
               </div>
+              {!loading && pager.total > 0 ? (
+                <AdminPager
+                  page={pager.page}
+                  pageSize={pager.pageSize}
+                  total={pager.total}
+                  totalPages={pager.totalPages}
+                  from={pager.from}
+                  to={pager.to}
+                  onPageChange={setPage}
+                  onPageSizeChange={(n) => {
+                    setPageSize(n)
+                    setPage(1)
+                  }}
+                />
+              ) : null}
             </>
           )}
 
           <p className="adminBack">
             <Link to="/admin/dashboard">← 관리자 홈</Link>
-            {' · '}
-            <Link to="/">메인</Link>
+            {' > '}
+            <span>랜딩 추천 문구</span>
           </p>
         </div>
       </main>

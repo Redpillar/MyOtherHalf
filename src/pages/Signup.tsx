@@ -393,13 +393,7 @@ export function Signup() {
 
           <div className="signupHero" aria-hidden="true">
             <div className="signupHeroCircles">
-              <div className="signupHeroSun" />
-              <svg className="signupHeroSilhouette" viewBox="0 0 200 120" fill="none">
-                <path
-                  d="M55 95c0-22 18-40 40-40s40 18 40 40H55zm40-52a16 16 0 1 1 0-32 16 16 0 0 1 0 32zm45 52c0-18 14-32 32-32s32 14 32 32h-64zm32-44a14 14 0 1 1 0-28 14 14 0 0 1 0 28z"
-                  fill="rgba(15,23,42,0.35)"
-                />
-              </svg>
+              <img className="signupHeroImage" src="/hero/signup-hero.png" alt="" />
             </div>
           </div>
 
@@ -784,6 +778,7 @@ export function Signup() {
                 </select>
               </div>
             </div>
+
 
             <div className="formRow">
               <label className="formLabel" htmlFor="education">

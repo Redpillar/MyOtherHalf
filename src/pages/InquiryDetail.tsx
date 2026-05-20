@@ -64,12 +64,19 @@ export function InquiryDetail() {
   const hasReply = Boolean(row?.reply?.trim())
 
   return (
-    <div className="loginPage inquiryDetailPage">
+    <div className="inquiryPage">
       <SiteHeader />
 
-      <main className="signupMain">
-        <div className="container signupInner" style={{ maxWidth: 720 }}>
-          <p style={{ margin: '0 0 12px', fontSize: 14 }}>
+      <main className="signupMain signupMain--hero">
+        <section className="inquiryHero">
+          <div className="container inquiryHeroInner">
+            <h1 className="inquiryHeroTitle">1:1 문의</h1>
+            <p className="inquiryHeroLead">문의 내용과 답변을 확인하세요.</p>
+          </div>
+        </section>
+
+        <div className="container signupInner inquiryDetailWrap">
+          <p className="inquiryBackRow">
             <Link to="/inquiry" className="navLink" style={{ fontWeight: 800 }}>
               ← 문의 목록
             </Link>
@@ -80,21 +87,18 @@ export function InquiryDetail() {
 
           {!loading && !error && row ? (
             <>
-              <h1 className="signupTitle" style={{ fontSize: 22, marginBottom: 8 }}>
-                {row.title}
-              </h1>
+              <h2 className="inquiryDetailTitle">{row.title}</h2>
               <p className="inquiryDetailMeta">
-                문의 #{row.id} · {statusLabel(row.status)} · 접수{' '}
-                {new Date(row.createdAt).toLocaleString('ko-KR')}
+                문의 #{row.id} · {statusLabel(row.status)} · 접수 {new Date(row.createdAt).toLocaleString('ko-KR')}
               </p>
 
-              <div className="adminSettingsCard card inquiryDetailBlock">
-                <h2 className="adminSettingsSectionTitle">문의 내용</h2>
-                <pre className="adminInquiryBody">{row.body}</pre>
-              </div>
+              <article className="card inquiryDetailCard">
+                <h3 className="inquirySectionTitle">문의 내용</h3>
+                <pre className="inquiryBody">{row.body}</pre>
+              </article>
 
-              <div className="adminSettingsCard card inquiryDetailBlock">
-                <h2 className="adminSettingsSectionTitle">답변</h2>
+              <article className="card inquiryDetailCard">
+                <h3 className="inquirySectionTitle">답변</h3>
                 {hasReply ? (
                   <>
                     {row.replyAt ? (
@@ -102,22 +106,21 @@ export function InquiryDetail() {
                         답변 등록: {new Date(row.replyAt).toLocaleString('ko-KR')}
                       </p>
                     ) : null}
-                    <pre className="adminInquiryBody inquiryReplyBody">{row.reply}</pre>
+                    <pre className="inquiryBody">{row.reply}</pre>
                   </>
                 ) : (
                   <p className="inquiryDetailPending">아직 등록된 답변이 없습니다. 순차적으로 안내드리겠습니다.</p>
                 )}
-              </div>
+              </article>
 
-              <p style={{ marginTop: 20, fontSize: 14 }}>
-                <Link to="/inquiry/new" className="navLink" style={{ fontWeight: 800 }}>
+              <div className="inquiryDetailActions">
+                <Link to="/inquiry/new" className="navLink">
                   추가 문의하기
                 </Link>
-                {' · '}
-                <Link to="/" className="navLink" style={{ fontWeight: 800 }}>
-                  메인
+                <Link to="/" className="navLink">
+                  메인으로
                 </Link>
-              </p>
+              </div>
             </>
           ) : null}
         </div>

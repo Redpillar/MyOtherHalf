@@ -1,4 +1,4 @@
-import { type FormEvent } from 'react'
+import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   saveAdminUiSettings,
@@ -8,7 +8,6 @@ import {
   type AdminUiSettings,
 } from '../admin/adminUiSettings'
 import { useAdminToken } from '../admin/adminSession'
-import { AdminMenu } from '../components/AdminMenu'
 import { SiteHeader } from '../components/SiteHeader'
 import './admin.scss'
 
@@ -29,24 +28,34 @@ function patchLoggedIn(prev: AdminUiSettings, patch: Partial<AdminMenuWhenLogged
 export function AdminMenuSettings() {
   const token = useAdminToken()
   const prefs = useAdminUiSettings()
-  const lo = prefs.menuWhenLoggedOut
-  const li = prefs.menuWhenLoggedIn
+  const [draft, setDraft] = useState<AdminUiSettings>(prefs)
 
-  const persist = (next: AdminUiSettings) => {
-    saveAdminUiSettings(next)
+  useEffect(() => {
+    setDraft(prefs)
+  }, [prefs])
+
+  const lo = draft.menuWhenLoggedOut
+  const li = draft.menuWhenLoggedIn
+
+  const dirty = useMemo(() => JSON.stringify(draft) !== JSON.stringify(prefs), [draft, prefs])
+
+  const persist = async () => {
+    if (!token) return
+    await saveAdminUiSettings(draft, token)
+    window.alert('저장되었습니다.')
   }
 
   const onLo = (key: keyof AdminMenuWhenLoggedOut) => (e: FormEvent<HTMLInputElement>) => {
-    persist(patchLoggedOut(prefs, { [key]: e.currentTarget.checked }))
+    setDraft((prev) => patchLoggedOut(prev, { [key]: e.currentTarget.checked }))
   }
 
   const onLi = (key: keyof AdminMenuWhenLoggedIn) => (e: FormEvent<HTMLInputElement>) => {
-    persist(patchLoggedIn(prefs, { [key]: e.currentTarget.checked }))
+    setDraft((prev) => patchLoggedIn(prev, { [key]: e.currentTarget.checked }))
   }
 
   const onResetMenus = () => {
-    persist({
-      ...prefs,
+    setDraft((prev) => ({
+      ...prev,
       menuWhenLoggedOut: { loginLink: true, settingsLink: false },
       menuWhenLoggedIn: {
         dashboard: true,
@@ -54,12 +63,14 @@ export function AdminMenuSettings() {
         managerList: true,
         managerRegister: true,
         inquiries: true,
+        notices: true,
+        reviews: true,
         recommendations: true,
         settings: true,
         menuSettings: true,
         logout: true,
       },
-    })
+    }))
   }
 
   return (
@@ -68,8 +79,6 @@ export function AdminMenuSettings() {
 
       <main className="adminMain">
         <div className="container adminInner" style={{ maxWidth: 640 }}>
-          <AdminMenu />
-
           <div className="adminHead">
             <h1 className="adminTitle">메뉴 표시 설정</h1>
             <p className="adminHint muted">
@@ -118,7 +127,15 @@ export function AdminMenuSettings() {
                 </label>
                 <label className="adminSettingsRow">
                   <input type="checkbox" checked={li.inquiries} onChange={onLi('inquiries')} />
-                  <span>1:1 문의 관리</span>
+                  <span>1:1 문의</span>
+                </label>
+                <label className="adminSettingsRow">
+                  <input type="checkbox" checked={li.notices} onChange={onLi('notices')} />
+                  <span>공지사항 관리 (/admin/notices)</span>
+                </label>
+                <label className="adminSettingsRow">
+                  <input type="checkbox" checked={li.reviews} onChange={onLi('reviews')} />
+                  <span>커플 후기 관리 (/admin/reviews)</span>
                 </label>
                 <label className="adminSettingsRow">
                   <input type="checkbox" checked={li.recommendations} onChange={onLi('recommendations')} />
@@ -142,18 +159,23 @@ export function AdminMenuSettings() {
                 <button type="button" className="btnGhost adminMenuSettingsReset" onClick={onResetMenus}>
                   메뉴 표시 기본값으로 되돌리기
                 </button>
+                <button
+                  type="button"
+                  className="submitBtn adminLoginBtn"
+                  style={{ marginLeft: 10 }}
+                  onClick={() => void persist()}
+                  disabled={!dirty}
+                >
+                  저장
+                </button>
               </p>
             </>
           )}
 
           <p className="adminBack">
-            <Link to="/admin/settings">← 일반 설정</Link>
-            {' · '}
-            <Link to="/admin/site-header-nav">헤더(메인) 메뉴</Link>
-            {' · '}
-            <Link to="/admin">회원 목록</Link>
-            {' · '}
-            <Link to="/">메인</Link>
+            <Link to="/admin/dashboard">← 관리자 홈</Link>
+            {' > '}
+            <span>메뉴 표시 설정</span>
           </p>
         </div>
       </main>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import type { PublicInquirySummary } from '../inquiry/inquiryTypes'
 import { SiteHeader } from '../components/SiteHeader'
 import { apiFetch } from '../lib/apiFetch'
@@ -16,8 +16,11 @@ function statusLabel(s: string) {
   return s
 }
 
+function statusBadgeClass(s: string) {
+  return s === 'closed' ? 'inquiryStatusBadge inquiryStatusBadge--closed' : 'inquiryStatusBadge'
+}
+
 export function InquiryList() {
-  const navigate = useNavigate()
   const member = useMemberSession()
   const profile = useMemberProfile()
   const [rows, setRows] = useState<PublicInquirySummary[]>([])
@@ -49,22 +52,29 @@ export function InquiryList() {
     void load()
   }, [load])
 
+  const leadText =
+    member && profile?.userId?.trim()
+      ? '로그인한 아이디로 접수한 문의만 표시됩니다. 제목을 눌러 상세와 답변을 확인하세요.'
+      : '접수된 문의 목록입니다. 제목을 눌러 상세와 답변을 확인하세요.'
+
   return (
-    <div className="loginPage inquiryListPage">
+    <div className="inquiryPage">
       <SiteHeader />
 
-      <main className="signupMain">
-        <div className="container signupInner inquiryListInner">
+      <main className="signupMain signupMain--hero">
+        <section className="inquiryHero">
+          <div className="container inquiryHeroInner">
+            <h1 className="inquiryHeroTitle">1:1 문의</h1>
+            <p className="inquiryHeroLead">{leadText}</p>
+          </div>
+        </section>
+
+        <div className="container signupInner inquiryListWrap">
           <div className="inquiryListHead">
-            <div>
-              <h1 className="signupTitle inquiryListTitle">1:1 문의</h1>
-              <p className="inquiryListSub">
-                {member && profile?.userId?.trim()
-                  ? '로그인한 아이디로 접수한 문의만 표시됩니다. 제목을 눌러 상세와 답변을 확인하세요.'
-                  : '접수된 문의 목록입니다. 제목을 눌러 상세와 답변을 확인하세요.'}
-              </p>
-            </div>
-            <Link to="/inquiry/new" className="submitBtn inquiryAskBtn">
+            <span className="inquiryListCount">
+              총 <strong>{rows.length}</strong>건
+            </span>
+            <Link to="/inquiry/new" className="inquiryAskBtn">
               문의하기
             </Link>
           </div>
@@ -72,57 +82,29 @@ export function InquiryList() {
           {error ? <p className="adminError">{error}</p> : null}
           {loading ? <p className="adminLoading">불러오는 중…</p> : null}
 
-          <div className="adminTableWrap inquiryTableWrap">
-            <table className="adminTable">
-              <thead>
-                <tr>
-                  <th>번호</th>
-                  <th>제목</th>
-                  <th>상태</th>
-                  <th>답변</th>
-                  <th>접수일</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.length === 0 && !loading ? (
-                  <tr>
-                    <td colSpan={5} className="adminEmpty">
-                      등록된 문의가 없습니다. <Link to="/inquiry/new">문의하기</Link>
-                    </td>
-                  </tr>
-                ) : (
-                  rows.map((r) => (
-                    <tr
-                      key={r.id}
-                      className="adminTableClickRow"
-                      tabIndex={0}
-                      role="link"
-                      aria-label={`문의 ${r.id} 상세`}
-                      onClick={() => navigate(`/inquiry/${r.id}`)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault()
-                          navigate(`/inquiry/${r.id}`)
-                        }
-                      }}
-                    >
-                      <td>{r.id}</td>
-                      <td>{r.title}</td>
-                      <td>{statusLabel(r.status)}</td>
-                      <td>{r.hasReply ? '등록됨' : '대기'}</td>
-                      <td className="adminCellNowrap">{new Date(r.createdAt).toLocaleString('ko-KR')}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          <p style={{ marginTop: 24, fontSize: 14 }}>
-            <Link to="/" className="navLink" style={{ fontWeight: 800 }}>
-              ← 메인으로
-            </Link>
-          </p>
+          {!loading && !error ? (
+            <div className="inquiryList">
+              {rows.length === 0 ? (
+                <div className="card inquiryEmpty">
+                  등록된 문의가 없습니다. <Link to="/inquiry/new">문의하기</Link>
+                </div>
+              ) : (
+                rows.map((r) => (
+                  <Link key={r.id} to={`/inquiry/${r.id}`} className="card inquiryCard">
+                    <div className="inquiryCardMeta">
+                      <span className={statusBadgeClass(r.status)}>{statusLabel(r.status)}</span>
+                      <span className={r.hasReply ? 'inquiryReplyBadge' : 'inquiryReplyBadge inquiryReplyBadge--pending'}>
+                        {r.hasReply ? '답변 등록됨' : '답변 대기'}
+                      </span>
+                      <span>문의 #{r.id}</span>
+                      <span>{new Date(r.createdAt).toLocaleString('ko-KR')}</span>
+                    </div>
+                    <h2 className="inquiryCardTitle">{r.title}</h2>
+                  </Link>
+                ))
+              )}
+            </div>
+          ) : null}
         </div>
       </main>
     </div>

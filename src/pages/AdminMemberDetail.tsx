@@ -10,7 +10,8 @@ import {
 } from '../data/koreaRegions'
 import { EDUCATION_OPTIONS, isKnownEducation } from '../data/educationLevels'
 import { apiFetch } from '../lib/apiFetch'
-import type { AdminMember } from '../admin/memberTypes'
+import type { AdminMember, ConsultationStatus } from '../admin/memberTypes'
+import { adminConsultationStatusLabel, ADMIN_CONSULTATION_STATUS_OPTIONS } from '../consult/consultTypes'
 import { clearAdminToken, getAdminToken, useAdminToken } from '../admin/adminSession'
 import { AdminMenu } from '../components/AdminMenu'
 import './signup.scss'
@@ -34,6 +35,16 @@ function ynDrink(v: string) {
   return v || '—'
 }
 
+function locationStatusText(member: AdminMember) {
+  if (!member.hasLocation || member.locationLat == null || member.locationLng == null) {
+    return '저장된 위치 없음'
+  }
+  const accuracyText =
+    member.locationAccuracyM != null ? `정확도 약 ${member.locationAccuracyM}m` : '정확도 정보 없음'
+  const timeText = member.locationUpdatedAt ? new Date(member.locationUpdatedAt).toLocaleString('ko-KR') : '시간 정보 없음'
+  return `${member.locationLat}, ${member.locationLng} · ${accuracyText} · ${timeText}`
+}
+
 type MemberEditDraft = {
   userId: string
   name: string
@@ -52,6 +63,7 @@ type MemberEditDraft = {
   car: string
   appeal: string
   obligationAgreed: boolean
+  consultationStatus: ConsultationStatus
   newPassword: string
 }
 
@@ -74,11 +86,12 @@ function memberToDraft(m: AdminMember): MemberEditDraft {
     car: m.car ?? '',
     appeal: m.appeal ?? '',
     obligationAgreed: m.obligationAgreed,
+    consultationStatus: m.consultationStatus ?? 'none',
     newPassword: '',
   }
 }
 
-function AdminMemberPhoto({ memberId, index }: { memberId: number; index: number }) {
+function AdminMemberPhoto({ memberId, index, photoKey }: { memberId: number; index: number; photoKey: string }) {
   const [src, setSrc] = useState<string | null>(null)
   const [failed, setFailed] = useState(false)
 
@@ -123,7 +136,7 @@ function AdminMemberPhoto({ memberId, index }: { memberId: number; index: number
       ac.abort()
       if (objectUrl) URL.revokeObjectURL(objectUrl)
     }
-  }, [memberId, index])
+  }, [memberId, index, photoKey])
 
   if (failed) {
     return <div className="adminPhotoTile adminPhotoTileError" role="img" aria-label="사진을 불러오지 못했습니다." />
@@ -145,6 +158,7 @@ export function AdminMemberDetail() {
   const [draft, setDraft] = useState<MemberEditDraft | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [photoDeletingIdx, setPhotoDeletingIdx] = useState<number | null>(null)
   const [adminUserIdDupHint, setAdminUserIdDupHint] = useState<string | null>(null)
   const [adminUserIdDupKind, setAdminUserIdDupKind] = useState<'ok' | 'err' | null>(null)
   const [adminUserIdDupBusy, setAdminUserIdDupBusy] = useState(false)
@@ -330,6 +344,7 @@ export function AdminMemberDetail() {
         car: draft.car,
         appeal: draft.appeal,
         obligationAgreed: draft.obligationAgreed,
+        consultationStatus: draft.consultationStatus,
       }
       if (draft.newPassword.trim()) {
         body.newPassword = draft.newPassword.trim()
@@ -369,6 +384,43 @@ export function AdminMemberDetail() {
       setSaveError(e instanceof Error ? e.message : '저장 중 오류가 발생했습니다.')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const deletePhoto = async (photoIndex: number) => {
+    if (!id || !token || !member) return
+    if (!window.confirm('이 사진을 삭제할까요?')) return
+    setPhotoDeletingIdx(photoIndex)
+    setSaveError(null)
+    try {
+      const r = await apiFetch(`/api/admin/members/${encodeURIComponent(id)}/photo/${photoIndex}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const ct = r.headers.get('content-type') || ''
+      const raw = await r.text()
+      let j: { member?: AdminMember; error?: string } = {}
+      if (ct.includes('application/json') && raw.trim()) {
+        j = JSON.parse(raw) as { member?: AdminMember; error?: string }
+      }
+      if (r.status === 401) {
+        clearAdminToken()
+        setSaveError('세션이 만료되었습니다. 다시 로그인해 주세요.')
+        return
+      }
+      if (!r.ok) {
+        setSaveError(j.error || `사진을 삭제하지 못했습니다. (${r.status})`)
+        return
+      }
+      if (!j.member) {
+        setSaveError('응답에 회원 정보가 없습니다.')
+        return
+      }
+      setMember(j.member)
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : '사진 삭제 중 오류가 발생했습니다.')
+    } finally {
+      setPhotoDeletingIdx(null)
     }
   }
 
@@ -434,6 +486,52 @@ export function AdminMemberDetail() {
             </div>
           ) : member ? (
             <div className="adminDetailCard">
+              <section className="adminConsultPanel" aria-labelledby="admin-consult-title">
+                <div className="adminConsultPanelHead">
+                  <h2 id="admin-consult-title" className="adminConsultPanelTitle">
+                    마이페이지 · 상담 상태
+                  </h2>
+                  {!editing ? (
+                    <p className="adminConsultPanelHint">정보 수정에서 상태를 변경할 수 있습니다.</p>
+                  ) : null}
+                </div>
+                {editing && draft ? (
+                  <div className="adminConsultPanelBody">
+                    <select
+                      className="adminDetailSelect adminConsultSelect"
+                      value={draft.consultationStatus}
+                      onChange={(e) => patchField('consultationStatus', e.target.value as ConsultationStatus)}
+                    >
+                      {ADMIN_CONSULTATION_STATUS_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                    {member.consultationRequestedAt ? (
+                      <p className="adminDetailMuted adminConsultPanelMeta">
+                        신청일 {new Date(member.consultationRequestedAt).toLocaleString('ko-KR')}
+                      </p>
+                    ) : (
+                      <p className="adminDetailMuted adminConsultPanelMeta">
+                        미신청 상태에서 다른 단계로 변경하면 신청일이 자동 기록됩니다.
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="adminConsultPanelBody">
+                    <span className="adminConsultStatusPill">
+                      {adminConsultationStatusLabel(member.consultationStatus)}
+                    </span>
+                    {member.consultationRequestedAt ? (
+                      <p className="adminDetailMuted adminConsultPanelMeta">
+                        신청일 {new Date(member.consultationRequestedAt).toLocaleString('ko-KR')}
+                      </p>
+                    ) : null}
+                  </div>
+                )}
+              </section>
+
               {editing && draft ? (
                 <>
                   {saveError ? <p className="adminDetailSaveHint adminError">{saveError}</p> : null}
@@ -628,6 +726,10 @@ export function AdminMemberDetail() {
                       </div>
                     </div>
                     <div className="adminDetailRow">
+                      <div className="adminDetailDt">저장된 위치</div>
+                      <div className="adminDetailDd">{locationStatusText(member)}</div>
+                    </div>
+                    <div className="adminDetailRow">
                       <div className="adminDetailDt">
                         최종학력 <span className="fieldOptional">(선택)</span>
                       </div>
@@ -721,11 +823,12 @@ export function AdminMemberDetail() {
                         <span className="req">*</span> 회원의 의무 동의
                       </div>
                       <div className="adminDetailDd">
-                        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'default' }}>
                           <input
                             type="checkbox"
                             checked={draft.obligationAgreed}
-                            onChange={(e) => patchField('obligationAgreed', e.target.checked)}
+                            disabled
+                            readOnly
                           />
                           <span>동의함</span>
                         </label>
@@ -751,8 +854,18 @@ export function AdminMemberDetail() {
                       <div className="adminDetailDd adminDetailPhotoDd">
                         {(member.photos?.length ?? 0) > 0 ? (
                           <div className="adminDetailPhotosGrid">
-                            {(member.photos ?? []).map((_, i) => (
-                              <AdminMemberPhoto key={i} memberId={member.id} index={i} />
+                            {(member.photos ?? []).map((photoName, i) => (
+                              <div key={`${photoName}-${i}`} className="adminPhotoCard">
+                                <AdminMemberPhoto memberId={member.id} index={i} photoKey={photoName} />
+                                <button
+                                  type="button"
+                                  className="linkBtn adminPhotoDeleteBtn"
+                                  disabled={photoDeletingIdx === i}
+                                  onClick={() => void deletePhoto(i)}
+                                >
+                                  {photoDeletingIdx === i ? '삭제 중…' : '사진 삭제'}
+                                </button>
+                              </div>
                             ))}
                           </div>
                         ) : (
@@ -809,6 +922,10 @@ export function AdminMemberDetail() {
                       </div>
                     </div>
                   <div className="adminDetailRow">
+                    <div className="adminDetailDt">저장된 위치</div>
+                    <div className="adminDetailDd">{locationStatusText(member)}</div>
+                  </div>
+                  <div className="adminDetailRow">
                     <div className="adminDetailDt">최종학력</div>
                     <div className="adminDetailDd">{member.education || '—'}</div>
                   </div>
@@ -835,8 +952,8 @@ export function AdminMemberDetail() {
                     <div className="adminDetailDd adminDetailPhotoDd">
                       {(member.photos?.length ?? 0) > 0 ? (
                         <div className="adminDetailPhotosGrid">
-                          {(member.photos ?? []).map((_, i) => (
-                            <AdminMemberPhoto key={i} memberId={member.id} index={i} />
+                          {(member.photos ?? []).map((photoName, i) => (
+                            <AdminMemberPhoto key={`${photoName}-${i}`} memberId={member.id} index={i} photoKey={photoName} />
                           ))}
                         </div>
                       ) : (
@@ -858,7 +975,11 @@ export function AdminMemberDetail() {
           ) : null}
 
           <p className="adminBack">
-            <Link to="/">← 메인으로</Link>
+            <Link to="/admin/dashboard">← 관리자 홈</Link>
+            {' > '}
+            <Link to="/admin">회원 목록</Link>
+            {' > '}
+            <span>회원 상세</span>
           </p>
         </div>
       </main>

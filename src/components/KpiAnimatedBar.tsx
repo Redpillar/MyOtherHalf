@@ -1,13 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
-
-const KPI_TARGETS = [
-  { value: 47758, format: (n: number) => `${n.toLocaleString('ko-KR')}+` },
-  { value: 55572, format: (n: number) => `${n.toLocaleString('ko-KR')}+` },
-  { value: 74, format: (n: number) => `${n}+` },
-  { value: 98, format: (n: number) => `${n}%` },
-] as const
-
-const LABELS = ['누적 가입자', '누적 커플', '진행중', '성사율'] as const
+import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+  DEFAULT_LANDING_KPI,
+  formatLandingKpiValue,
+  landingKpiEntries,
+  type LandingKpiStats,
+} from '../landing/landingKpiTypes'
+import { apiFetch, readJsonResponse } from '../lib/apiFetch'
 
 function easeOutQuart(t: number) {
   return 1 - (1 - t) ** 4
@@ -15,14 +13,37 @@ function easeOutQuart(t: number) {
 
 export function KpiAnimatedBar() {
   const rootRef = useRef<HTMLDivElement>(null)
-  const [display, setDisplay] = useState(() => KPI_TARGETS.map(() => 0))
+  const [stats, setStats] = useState<LandingKpiStats>(DEFAULT_LANDING_KPI)
+  const [display, setDisplay] = useState(() => landingKpiEntries(DEFAULT_LANDING_KPI).map(() => 0))
   const hasRun = useRef(false)
+  const entries = useMemo(() => landingKpiEntries(stats), [stats])
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const r = await apiFetch('/api/landing-kpi')
+        const j = await readJsonResponse<{ kpi?: LandingKpiStats }>(r)
+        if (!cancelled && r.ok && j.kpi) setStats(j.kpi)
+      } catch {
+        // fallback to defaults
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    hasRun.current = false
+    setDisplay(entries.map(() => 0))
+  }, [stats.cumulativeMembers, stats.cumulativeCouples, stats.inProgress, stats.successRate])
 
   useEffect(() => {
     const el = rootRef.current
     if (!el) return
 
-    const targets = KPI_TARGETS.map((k) => k.value)
+    const targets = entries.map((item) => item.value)
     const durationMs = 2000
 
     const run = () => {
@@ -51,22 +72,22 @@ export function KpiAnimatedBar() {
     }
 
     const io = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) run()
+      (observed) => {
+        if (observed.some((e) => e.isIntersecting)) run()
       },
       { threshold: 0.15, rootMargin: '0px 0px -40px 0px' },
     )
 
     io.observe(el)
     return () => io.disconnect()
-  }, [])
+  }, [stats.cumulativeMembers, stats.cumulativeCouples, stats.inProgress, stats.successRate])
 
   return (
     <div ref={rootRef} className="kpiBar card">
-      {KPI_TARGETS.map((item, i) => (
-        <div key={item.value} className="kpiItem">
-          <p className="kpiValue">{item.format(display[i] ?? 0)}</p>
-          <p className="kpiLabel">{LABELS[i]}</p>
+      {entries.map((item, i) => (
+        <div key={item.key} className="kpiItem">
+          <p className="kpiValue">{formatLandingKpiValue(item.key, display[i] ?? 0)}</p>
+          <p className="kpiLabel">{item.label}</p>
         </div>
       ))}
     </div>

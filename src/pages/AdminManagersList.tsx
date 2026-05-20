@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import type { AdminManagerRow } from '../admin/managerTypes'
 import { clearAdminToken, useAdminToken } from '../admin/adminSession'
-import { AdminMenu } from '../components/AdminMenu'
+import { AdminPager } from '../components/AdminPager'
+import { usePagination } from '../components/AdminPagination'
 import { SiteHeader } from '../components/SiteHeader'
 import { apiFetch, readJsonResponse } from '../lib/apiFetch'
 import './admin.scss'
@@ -17,6 +18,8 @@ export function AdminManagersList() {
   const [managers, setManagers] = useState<AdminManagerRow[]>([])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(20)
 
   const load = useCallback(async () => {
     const t = token
@@ -36,6 +39,7 @@ export function AdminManagersList() {
       }
       if (!r.ok) throw new Error(j.error || '목록을 불러오지 못했습니다.')
       setManagers(Array.isArray(j.managers) ? j.managers : [])
+      setPage(1)
     } catch (e) {
       setError(e instanceof Error ? e.message : '연결을 확인해 주세요.')
       setManagers([])
@@ -48,14 +52,14 @@ export function AdminManagersList() {
     void load()
   }, [load])
 
+  const pager = usePagination(managers, page, pageSize)
+
   return (
     <div className="adminPage">
       <SiteHeader />
 
       <main className="adminMain">
         <div className="container adminInner">
-          <AdminMenu />
-
           <div className="adminHead">
             <h1 className="adminTitle">매니저 목록</h1>
             <p className="adminHint muted">행을 눌러 정보를 수정할 수 있습니다.</p>
@@ -88,22 +92,21 @@ export function AdminManagersList() {
                       <th aria-label="사진" />
                       <th>ID</th>
                       <th>이름</th>
-                      <th>별점</th>
+                      <th>한 줄 소개</th>
                       <th>성사</th>
-                      <th>후기</th>
                       <th>등록일</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {managers.length === 0 ? (
+                    {pager.total === 0 ? (
                       <tr>
-                        <td colSpan={7} className="adminEmpty">
+                        <td colSpan={6} className="adminEmpty">
                           등록된 매니저가 없습니다.{' '}
                           <Link to="/admin/managers/register">매니저 등록</Link>
                         </td>
                       </tr>
                     ) : (
-                      managers.map((m) => (
+                      pager.pageItems.map((m) => (
                         <tr
                           key={m.id}
                           className="adminTableClickRow"
@@ -135,9 +138,12 @@ export function AdminManagersList() {
                           </td>
                           <td>{m.id}</td>
                           <td>{m.name}</td>
-                          <td>{m.ratingStars}</td>
+                          <td style={{ maxWidth: 280 }}>
+                            <div className="muted" style={{ fontSize: 13, lineHeight: 1.5 }}>
+                              {m.intro || '—'}
+                            </div>
+                          </td>
                           <td>{m.successCount}</td>
-                          <td>{m.reviewCount}</td>
                           <td className="adminCellNowrap">
                             {m.createdAt ? new Date(m.createdAt).toLocaleString('ko-KR') : '—'}
                           </td>
@@ -147,13 +153,28 @@ export function AdminManagersList() {
                   </tbody>
                 </table>
               </div>
+              {!loading && pager.total > 0 ? (
+                <AdminPager
+                  page={pager.page}
+                  pageSize={pager.pageSize}
+                  total={pager.total}
+                  totalPages={pager.totalPages}
+                  from={pager.from}
+                  to={pager.to}
+                  onPageChange={setPage}
+                  onPageSizeChange={(n) => {
+                    setPageSize(n)
+                    setPage(1)
+                  }}
+                />
+              ) : null}
             </>
           )}
 
           <p className="adminBack">
-            <Link to="/admin">← 회원 목록</Link>
-            {' · '}
-            <Link to="/">메인</Link>
+            <Link to="/admin/dashboard">← 관리자 홈</Link>
+            {' > '}
+            <span>매니저 목록</span>
           </p>
         </div>
       </main>

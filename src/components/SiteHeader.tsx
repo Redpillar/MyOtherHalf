@@ -1,45 +1,117 @@
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { siteNavItems } from '../config/nav'
+import { clearAdminToken, useAdminToken } from '../admin/adminSession'
 import { setMemberSession, useMemberSession } from '../lib/memberSession'
 import { useSiteHeaderNavConfig } from '../lib/siteHeaderNavSettings'
 import '../pages/landing.scss'
 
+const adminNavItems: { id: string; to: string; label: string }[] = [
+  { id: 'admin-members', to: '/admin', label: '회원 목록' },
+  { id: 'admin-managers', to: '/admin/managers', label: '매니저 목록' },
+  { id: 'admin-inquiries', to: '/admin/inquiries', label: '1:1 문의' },
+  { id: 'admin-notices', to: '/admin/notices', label: '공지사항' },
+  { id: 'admin-reviews', to: '/admin/reviews', label: '커플 후기' },
+  { id: 'admin-recommendations', to: '/admin/recommendations', label: '랜딩 추천 문구' },
+  { id: 'admin-landing-kpi', to: '/admin/landing-kpi', label: '메인 KPI' },
+  { id: 'admin-menu-settings', to: '/admin/menu-settings', label: '메뉴 표시 설정' },
+  { id: 'admin-site-header-nav', to: '/admin/site-header-nav', label: '헤더(메인) 메뉴' },
+]
+
 export function SiteHeader() {
   const navigate = useNavigate()
   const member = useMemberSession()
+  const adminToken = useAdminToken()
   const navConfig = useSiteHeaderNavConfig()
   const navVis = member ? navConfig.whenLoggedIn : navConfig.whenLoggedOut
   const visibleItems = siteNavItems.filter((item) => navVis[item.id])
+  const isAdmin = Boolean(adminToken)
+  const [newInquiryCount, setNewInquiryCount] = useState<number>(0)
+
+  const adminInquiryLink = useMemo(() => adminNavItems.find((x) => x.id === 'admin-inquiries')?.to, [])
+
+  useEffect(() => {
+    if (!isAdmin || !adminToken) {
+      setNewInquiryCount(0)
+      return
+    }
+
+    let cancelled = false
+    const controller = new AbortController()
+
+    ;(async () => {
+      try {
+        const r = await fetch('/api/admin/inquiries', {
+          headers: { Authorization: `Bearer ${adminToken}` },
+          signal: controller.signal,
+        })
+        if (!r.ok) return
+        const j = (await r.json()) as { inquiries?: Array<{ hasReply?: boolean; status?: string }> }
+        const rows = Array.isArray(j.inquiries) ? j.inquiries : []
+        const count = rows.filter((x) => x?.status === 'new').length
+        if (!cancelled) setNewInquiryCount(count)
+      } catch {
+        // ignore
+      }
+    })()
+
+    return () => {
+      cancelled = true
+      controller.abort()
+    }
+  }, [isAdmin, adminToken])
 
   return (
     <>
       <header className="topBar">
         <div className="container topBarInner">
-          <Link to="/" className="brand" style={{ textDecoration: 'none', color: 'inherit' }}>
+          <Link to={isAdmin ? '/admin/dashboard' : '/'} className="brand" style={{ textDecoration: 'none', color: 'inherit' }}>
             <span className="brandMark" aria-hidden="true" />
             <span className="brandName">내반쪽</span>
           </Link>
 
           <nav className="nav" aria-label="메인 메뉴">
-            {visibleItems.map((item) =>
-              item.href.startsWith('/') && !item.href.includes('#') ? (
-                <Link
-                  key={item.id}
-                  className="navLink"
-                  to={item.id === 'contact' ? (member ? '/inquiry' : '/inquiry/new') : item.href}
-                >
-                  {item.label}
-                </Link>
-              ) : (
-                <a key={item.id} className="navLink" href={item.href}>
-                  {item.label}
-                </a>
-              ),
-            )}
+            {isAdmin
+              ? adminNavItems.map((item) => (
+                  <Link key={item.id} className="navLink" to={item.to}>
+                    {item.label}
+                    {item.to === adminInquiryLink && newInquiryCount > 0 ? (
+                      <span className="navBadge" aria-label={`신규 문의 ${newInquiryCount}건`}>
+                        N
+                      </span>
+                    ) : null}
+                  </Link>
+                ))
+              : visibleItems.map((item) =>
+                  item.href.startsWith('/') && !item.href.includes('#') ? (
+                    <Link
+                      key={item.id}
+                      className="navLink"
+                      to={item.id === 'contact' ? (member ? '/inquiry' : '/inquiry/new') : item.href}
+                    >
+                      {item.label}
+                    </Link>
+                  ) : (
+                    <a key={item.id} className="navLink" href={item.href}>
+                      {item.label}
+                    </a>
+                  ),
+                )}
           </nav>
 
           <div className="auth">
-            {member ? (
+            {isAdmin ? (
+              <button
+                type="button"
+                className="navLink siteHeaderLogoutBtn"
+                onClick={() => {
+                  clearAdminToken()
+                  navigate('/admin', { replace: true })
+                }}
+              >
+                관리자 로그아웃
+              </button>
+            ) : member ? (
               <>
                 <button
                   type="button"
@@ -51,8 +123,8 @@ export function SiteHeader() {
                 >
                   로그아웃
                 </button>
-                <Link className="navLink" to="/me/edit">
-                  회원 수정
+                <Link className="navLink" to="/consult">
+                  마이페이지
                 </Link>
               </>
             ) : (

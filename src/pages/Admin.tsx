@@ -3,8 +3,11 @@ import { Link, useNavigate } from 'react-router-dom'
 import type { AdminMember } from '../admin/memberTypes'
 import { clearAdminToken, setAdminToken, useAdminToken } from '../admin/adminSession'
 import { useAdminUiSettings } from '../admin/adminUiSettings'
-import { AdminMenu } from '../components/AdminMenu'
+import { AdminPager } from '../components/AdminPager'
+import { usePagination } from '../components/AdminPagination'
 import { SiteHeader } from '../components/SiteHeader'
+import { findSidoName, findSigunguName } from '../data/koreaRegions'
+import { adminConsultationStatusLabel } from '../consult/consultTypes'
 import { apiFetch, readJsonResponse } from '../lib/apiFetch'
 import './signup.scss'
 import './admin.scss'
@@ -18,6 +21,8 @@ export function Admin() {
   const [members, setMembers] = useState<AdminMember[]>([])
   const [listError, setListError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(20)
 
   const fetchMembers = useCallback(async (t: string) => {
     setLoading(true)
@@ -34,6 +39,7 @@ export function Admin() {
       }
       if (!r.ok) throw new Error(j.error || '목록을 불러오지 못했습니다.')
       setMembers(j.members || [])
+      setPage(1)
     } catch (e) {
       setListError(e instanceof Error ? e.message : 'API 서버 연결을 확인하세요.')
     } finally {
@@ -44,6 +50,8 @@ export function Admin() {
   useEffect(() => {
     if (token) void fetchMembers(token)
   }, [token, fetchMembers])
+
+  const pager = usePagination(members, page, pageSize)
 
   const onLogin = async (e: FormEvent) => {
     e.preventDefault()
@@ -70,14 +78,9 @@ export function Admin() {
 
       <main className="adminMain">
         <div className="container adminInner">
-          <AdminMenu />
-
           <div className="adminHead">
-            <h1 className="adminTitle">관리자 · 회원 조회</h1>
-            <p className="adminHint muted">
-              기본 비밀번호는 환경변수 <code>ADMIN_PASSWORD</code>로 바꿀 수 있습니다. (미설정 시{' '}
-              <code>admin123</code>)
-            </p>
+            <h1 className="adminTitle">회원 목록</h1>
+            <p className="adminHint muted">가입된 회원을 확인하고, 행을 클릭해 상세 정보로 이동할 수 있습니다.</p>
           </div>
 
           {!token ? (
@@ -127,6 +130,7 @@ export function Admin() {
                       <th>몸무게</th>
                       <th>직업</th>
                       <th>지역</th>
+                      <th>상담 상태</th>
                       <th>MBTI</th>
                       <th>흡연</th>
                       <th>음주</th>
@@ -134,14 +138,14 @@ export function Admin() {
                     </tr>
                   </thead>
                   <tbody>
-                    {members.length === 0 ? (
+                    {pager.total === 0 ? (
                       <tr>
-                        <td colSpan={14} className="adminEmpty">
+                        <td colSpan={15} className="adminEmpty">
                           등록된 회원이 없습니다.
                         </td>
                       </tr>
                     ) : (
-                      members.map((m) => (
+                      pager.pageItems.map((m) => (
                         <tr
                           key={m.id}
                           className="adminTableClickRow"
@@ -166,8 +170,9 @@ export function Admin() {
                           <td>{m.weight}</td>
                           <td>{m.job}</td>
                           <td>
-                            {m.region1}/{m.region2}
+                            {findSidoName(m.region1)} · {findSigunguName(m.region1, m.region2)}
                           </td>
+                          <td className="adminCellNowrap">{adminConsultationStatusLabel(m.consultationStatus)}</td>
                           <td>{m.mbti || '—'}</td>
                           <td>{m.smoke === 'yes' ? '흡연' : '비흡연'}</td>
                           <td>{m.drink === 'yes' ? '음주' : '비음주'}</td>
@@ -178,11 +183,28 @@ export function Admin() {
                   </tbody>
                 </table>
               </div>
+              {!loading && pager.total > 0 ? (
+                <AdminPager
+                  page={pager.page}
+                  pageSize={pager.pageSize}
+                  total={pager.total}
+                  totalPages={pager.totalPages}
+                  from={pager.from}
+                  to={pager.to}
+                  onPageChange={setPage}
+                  onPageSizeChange={(n) => {
+                    setPageSize(n)
+                    setPage(1)
+                  }}
+                />
+              ) : null}
             </>
           )}
 
           <p className="adminBack">
-            <Link to="/">← 메인으로</Link>
+            <Link to="/admin/dashboard">← 관리자 홈</Link>
+            {' > '}
+            <span>회원 목록</span>
           </p>
         </div>
       </main>

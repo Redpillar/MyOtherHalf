@@ -1,7 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import { siteNavItems, type SiteNavId } from '../config/nav'
 
-const STORAGE_KEY = 'demo_site_header_nav'
 const EVT = 'demo-site-header-nav'
 
 export type SiteHeaderNavVisibility = Record<SiteNavId, boolean>
@@ -41,69 +40,71 @@ function isLegacyFlatNav(parsed: Record<string, unknown>): boolean {
   return siteNavItems.some((item) => Object.prototype.hasOwnProperty.call(parsed, item.id))
 }
 
-function readFromStorage(): SiteHeaderNavConfig {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) {
-      return {
-        whenLoggedOut: allTrue(),
-        whenLoggedIn: allTrue(),
-      }
-    }
-    const parsed = JSON.parse(raw) as Record<string, unknown>
-    if (isLegacyFlatNav(parsed)) {
-      const merged = mergeVisibility(parsed)
-      return { whenLoggedOut: merged, whenLoggedIn: whenLoggedInWithContact(merged) }
-    }
-    return {
-      whenLoggedOut: mergeVisibility(parsed.whenLoggedOut),
-      whenLoggedIn: whenLoggedInWithContact(mergeVisibility(parsed.whenLoggedIn)),
-    }
-  } catch {
-    return {
-      whenLoggedOut: allTrue(),
-      whenLoggedIn: allTrue(),
-    }
+let snapshot: SiteHeaderNavConfig = { whenLoggedOut: allTrue(), whenLoggedIn: allTrue() }
+
+function setSnapshot(next: SiteHeaderNavConfig) {
+  snapshot = {
+    whenLoggedOut: { ...next.whenLoggedOut },
+    whenLoggedIn: whenLoggedInWithContact({ ...next.whenLoggedIn }),
+  }
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(EVT))
+}
+
+async function fetchFromServer(): Promise<SiteHeaderNavConfig> {
+  const r = await fetch('/api/site-header-nav')
+  if (!r.ok) throw new Error('failed')
+  const j = (await r.json()) as { config?: unknown }
+  const parsed = (j.config || {}) as Record<string, unknown>
+  if (isLegacyFlatNav(parsed)) {
+    const merged = mergeVisibility(parsed)
+    return { whenLoggedOut: merged, whenLoggedIn: whenLoggedInWithContact(merged) }
+  }
+  return {
+    whenLoggedOut: mergeVisibility(parsed.whenLoggedOut),
+    whenLoggedIn: whenLoggedInWithContact(mergeVisibility(parsed.whenLoggedIn)),
   }
 }
 
-let snapshot: SiteHeaderNavConfig =
-  typeof window !== 'undefined' ? readFromStorage() : { whenLoggedOut: allTrue(), whenLoggedIn: allTrue() }
-
-function syncSnapshotFromStorage() {
-  snapshot = readFromStorage()
+export async function refreshSiteHeaderNavConfig() {
+  try {
+    const next = await fetchFromServer()
+    setSnapshot(next)
+  } catch {
+    // ignore
+  }
 }
 
 export function loadSiteHeaderNavConfig(): SiteHeaderNavConfig {
   return snapshot
 }
 
-export function saveSiteHeaderNavConfig(next: SiteHeaderNavConfig) {
+export async function saveSiteHeaderNavConfig(next: SiteHeaderNavConfig, token: string) {
   const copy: SiteHeaderNavConfig = {
     whenLoggedOut: { ...next.whenLoggedOut },
     whenLoggedIn: whenLoggedInWithContact(next.whenLoggedIn),
   }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(copy))
-  snapshot = copy
-  window.dispatchEvent(new Event(EVT))
+  const r = await fetch('/api/admin/site-header-nav', {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(copy),
+  })
+  if (!r.ok) throw new Error('저장에 실패했습니다.')
+  const j = (await r.json()) as { config?: unknown }
+  const saved = (j.config || copy) as Record<string, unknown>
+  setSnapshot({
+    whenLoggedOut: mergeVisibility(saved.whenLoggedOut),
+    whenLoggedIn: whenLoggedInWithContact(mergeVisibility(saved.whenLoggedIn)),
+  })
 }
 
 export function subscribeSiteHeaderNav(callback: () => void) {
-  const onEvt = () => {
-    syncSnapshotFromStorage()
-    callback()
-  }
-  const onStorage = (e: StorageEvent) => {
-    if (e.key === STORAGE_KEY) {
-      syncSnapshotFromStorage()
-      callback()
-    }
-  }
+  const onEvt = () => callback()
   window.addEventListener(EVT, onEvt)
-  window.addEventListener('storage', onStorage)
   return () => {
     window.removeEventListener(EVT, onEvt)
-    window.removeEventListener('storage', onStorage)
   }
 }
 
@@ -120,3 +121,5 @@ function getServerSnapshot(): SiteHeaderNavConfig {
 export function useSiteHeaderNavConfig(): SiteHeaderNavConfig {
   return useSyncExternalStore(subscribeSiteHeaderNav, loadSiteHeaderNavConfig, getServerSnapshot)
 }
+
+if (typeof window !== 'undefined') void refreshSiteHeaderNavConfig()

@@ -2,14 +2,12 @@ import { type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { siteNavItems, type SiteNavId } from '../config/nav'
 import { useAdminToken } from '../admin/adminSession'
-import { setMemberSession, useMemberSession } from '../lib/memberSession'
 import {
   saveSiteHeaderNavConfig,
   useSiteHeaderNavConfig,
   type SiteHeaderNavConfig,
   type SiteHeaderNavVisibility,
 } from '../lib/siteHeaderNavSettings'
-import { AdminMenu } from '../components/AdminMenu'
 import { SiteHeader } from '../components/SiteHeader'
 import './admin.scss'
 
@@ -23,11 +21,11 @@ function allTrue(): SiteHeaderNavVisibility {
 
 export function AdminSiteHeaderNavSettings() {
   const token = useAdminToken()
-  const member = useMemberSession()
   const cfg = useSiteHeaderNavConfig()
 
   const persist = (next: SiteHeaderNavConfig) => {
-    saveSiteHeaderNavConfig(next)
+    if (!token) return
+    void saveSiteHeaderNavConfig(next, token)
   }
 
   const onToggleOut = (id: SiteNavId) => (e: FormEvent<HTMLInputElement>) => {
@@ -52,8 +50,6 @@ export function AdminSiteHeaderNavSettings() {
 
       <main className="adminMain">
         <div className="container adminInner" style={{ maxWidth: 640 }}>
-          <AdminMenu />
-
           <div className="adminHead">
             <h1 className="adminTitle">헤더 메뉴 표시</h1>
             <p className="adminHint muted">
@@ -61,30 +57,6 @@ export function AdminSiteHeaderNavSettings() {
               <Link to="/login">로그인 페이지</Link>에서 제출 시 데모 세션이 켜집니다.) 이 브라우저 <code>localStorage</code>에만
               저장되며, 위 헤더에 바로 반영됩니다.
             </p>
-          </div>
-
-          <div className="adminSettingsCard card" style={{ marginBottom: 16 }}>
-            <h2 className="adminSettingsSectionTitle">미리보기 (회원 세션)</h2>
-            <p className="adminMenuSettingsHint muted" style={{ marginTop: 0 }}>
-              지금 헤더는 <strong>{member ? '로그인 상태' : '로그아웃 상태'}</strong> 설정을 씁니다. 전환은 아래 버튼으로만 테스트할 수
-              있습니다.
-            </p>
-            <div className="adminSettingsBtnRow">
-              <button
-                type="button"
-                className={`submitBtn adminLoginBtn adminSettingsBtnHalf${!member ? ' adminPreviewBtnActive' : ''}`}
-                onClick={() => setMemberSession(false)}
-              >
-                미리보기: 로그아웃
-              </button>
-              <button
-                type="button"
-                className={`submitBtn adminLoginBtn adminSettingsBtnHalf${member ? ' adminPreviewBtnActive' : ''}`}
-                onClick={() => setMemberSession(true)}
-              >
-                미리보기: 로그인
-              </button>
-            </div>
           </div>
 
           {!token ? (
@@ -137,9 +109,9 @@ export function AdminSiteHeaderNavSettings() {
           )}
 
           <p className="adminBack">
-            <Link to="/admin/settings">← 관리자 설정</Link>
-            {' · '}
-            <Link to="/">메인</Link>
+            <Link to="/admin/dashboard">← 관리자 홈</Link>
+            {' > '}
+            <span>헤더(메인) 메뉴</span>
           </p>
         </div>
       </main>

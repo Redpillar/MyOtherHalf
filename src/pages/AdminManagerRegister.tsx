@@ -10,9 +10,10 @@ import './admin.scss'
 export function AdminManagerRegister() {
   const token = useAdminToken()
   const [name, setName] = useState('')
-  const [ratingStars, setRatingStars] = useState(5)
+  const [intro, setIntro] = useState('')
+  const [tags, setTags] = useState('')
+  const [consultMethod, setConsultMethod] = useState('')
   const [successCount, setSuccessCount] = useState(0)
-  const [reviewCount, setReviewCount] = useState(0)
   const [file, setFile] = useState<File | null>(null)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
@@ -38,9 +39,10 @@ export function AdminManagerRegister() {
       }
       const fd = new FormData()
       fd.set('name', name.trim())
-      fd.set('ratingStars', String(ratingStars))
+      fd.set('intro', intro.trim())
+      fd.set('tags', tags.trim())
+      fd.set('consultMethod', consultMethod.trim())
       fd.set('successCount', String(Math.max(0, Math.floor(successCount))))
-      fd.set('reviewCount', String(Math.max(0, Math.floor(reviewCount))))
       fd.set('photo', file)
       setBusy(true)
       try {
@@ -73,9 +75,10 @@ export function AdminManagerRegister() {
         }
         setMessage(`${j.manager?.name ?? name} 매니저가 등록되었습니다.`)
         setName('')
-        setRatingStars(5)
+        setIntro('')
+        setTags('')
+        setConsultMethod('')
         setSuccessCount(0)
-        setReviewCount(0)
         setFile(null)
         e.currentTarget.reset()
       } catch (err) {
@@ -84,7 +87,7 @@ export function AdminManagerRegister() {
         setBusy(false)
       }
     },
-    [name, ratingStars, successCount, reviewCount, file, token],
+    [name, intro, tags, consultMethod, successCount, file, token],
   )
 
   return (
@@ -118,6 +121,46 @@ export function AdminManagerRegister() {
                 required
               />
 
+              <label className="adminLabel" htmlFor="mgr-intro">
+                한 줄 소개
+              </label>
+              <textarea
+                id="mgr-intro"
+                className="adminPwInput"
+                value={intro}
+                onChange={(e) => setIntro(e.target.value)}
+                placeholder="예: 20대·30대 직장인 맞춤 매칭 전문"
+                rows={3}
+                maxLength={200}
+              />
+
+              <label className="adminLabel" htmlFor="mgr-tags">
+                키워드 태그
+              </label>
+              <input
+                id="mgr-tags"
+                className="adminPwInput"
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
+                placeholder="예: 카카오톡 상담, 프로필 코칭, 첫 만남 케어"
+                maxLength={120}
+              />
+              <p className="adminHint muted" style={{ marginTop: -6 }}>
+                쉼표(,)로 구분해 입력하세요. 최대 8개까지 노출됩니다.
+              </p>
+
+              <label className="adminLabel" htmlFor="mgr-consult">
+                상담 방식 (한 줄)
+              </label>
+              <input
+                id="mgr-consult"
+                className="adminPwInput"
+                value={consultMethod}
+                onChange={(e) => setConsultMethod(e.target.value)}
+                placeholder="예: 신청 후 카카오톡으로 1:1 맞춤 상담을 진행합니다."
+                maxLength={100}
+              />
+
               <label className="adminLabel" htmlFor="mgr-photo">
                 프로필 사진 <span className="req">*</span>
               </label>
@@ -128,22 +171,6 @@ export function AdminManagerRegister() {
                 className="adminPwInput"
                 onChange={(e) => setFile(e.target.files?.[0] ?? null)}
               />
-
-              <label className="adminLabel" htmlFor="mgr-rating">
-                별점 (1~5)
-              </label>
-              <select
-                id="mgr-rating"
-                className="adminPwInput"
-                value={ratingStars}
-                onChange={(e) => setRatingStars(Number(e.target.value))}
-              >
-                {[5, 4, 3, 2, 1].map((n) => (
-                  <option key={n} value={n}>
-                    {'★'.repeat(n) + '☆'.repeat(5 - n)} ({n})
-                  </option>
-                ))}
-              </select>
 
               <label className="adminLabel" htmlFor="mgr-success">
                 총 소개팅 성사 (건)
@@ -157,18 +184,6 @@ export function AdminManagerRegister() {
                 onChange={(e) => setSuccessCount(Number(e.target.value))}
               />
 
-              <label className="adminLabel" htmlFor="mgr-review">
-                후기 (건)
-              </label>
-              <input
-                id="mgr-review"
-                type="number"
-                min={0}
-                className="adminPwInput"
-                value={reviewCount}
-                onChange={(e) => setReviewCount(Number(e.target.value))}
-              />
-
               {error ? <p className="adminError">{error}</p> : null}
               {message ? <p style={{ margin: 0, color: '#047857', fontWeight: 700, fontSize: 14 }}>{message}</p> : null}
 
@@ -179,13 +194,11 @@ export function AdminManagerRegister() {
           )}
 
           <p className="adminBack" style={{ marginTop: 20 }}>
+            <Link to="/admin/dashboard">← 관리자 홈</Link>
+            {' > '}
             <Link to="/admin/managers">매니저 목록</Link>
-            {' · '}
-            <Link to="/admin">← 관리자(회원 목록)</Link>
-            {' · '}
-            <Link to="/managers">매니저 소개 보기</Link>
-            {' · '}
-            <Link to="/">메인</Link>
+            {' > '}
+            <span>매니저 등록</span>
           </p>
         </div>
       </main>

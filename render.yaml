@@ -1,0 +1,15 @@
+# Render.com 무료 Web Service 배포 (https://render.com)
+# GitHub 저장소 연결 후 Blueprint로 적용하거나, 대시보드에서 동일 설정을 입력하세요.
+services:
+  - type: web
+    name: myotherhalf
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: '22'
+      - key: ADMIN_PASSWORD
+        generateValue: true

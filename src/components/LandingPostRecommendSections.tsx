@@ -1,5 +1,13 @@
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
+import { useMemberSession } from '../lib/memberSession'
 import './landing-post-recommend.scss'
+
+type BigDataMember = {
+  id: number
+  line: string
+  status: string
+}
 
 function IconCheckCircle() {
   return (
@@ -51,17 +59,97 @@ function IconId() {
 }
 
 const VERIFY_CARDS = [
-  { title: '본인인증', desc: '핸드폰, 카카오톡 인증', Icon: IconPhone },
-  { title: '직업인증', desc: '사원증, 명함, 재직증명서 등', Icon: IconBriefcase },
-  { title: '신분증', desc: '주민등록증, 운전면허증', Icon: IconId },
+  { title: '본인 확인', desc: '휴대폰·카카오톡 인증', Icon: IconPhone },
+  { title: '직업 확인', desc: '사원증·명함·재직증명서', Icon: IconBriefcase },
+  { title: '신분 확인', desc: '주민등록증·운전면허증', Icon: IconId },
 ]
 
-const BIGDATA_MEMBERS = [
-  { line: '이○주 | 30세 | S대기업 | 남', status: '활동중' },
-  { line: '김○준 | 29세 | 프리랜서 | 남', status: '활동중' },
-  { line: '설○은 | 33세 | 디자이너 | 여', status: '활동중' },
-  { line: '서○우 | 27세 | 컨설팅업 | 여', status: '활동중' },
-]
+const BD_SURNAMES = [
+  '김', '이', '박', '최', '정', '강', '조', '윤', '장', '임', '한', '오', '서', '신', '권', '황', '안', '송', '유', '홍',
+] as const
+
+const BD_GIVEN_MALE = ['민준', '서준', '도윤', '예준', '시우', '하준', '지훈', '우진', '현우', '준서'] as const
+const BD_GIVEN_FEMALE = ['서연', '지우', '서윤', '지민', '수아', '하은', '민서', '채원', '예은', '다은'] as const
+
+const BD_JOBS = [
+  'S대기업',
+  '스타트업',
+  '프리랜서',
+  '디자이너',
+  '공무원',
+  '교사',
+  '의료직',
+  '금융권',
+  'IT개발',
+  '컨설팅업',
+  '마케팅',
+  '연구직',
+  '법률직',
+  '요리사',
+  '건축직',
+] as const
+
+/** 표시 이름: 3자(김○준) 95% · 2자(김○) 5% */
+function maskName(surname: string, given: string, memberId: number): string {
+  const twoChar = memberId % 20 === 0
+  if (twoChar) return `${surname}○`
+  const last = given.slice(-1)
+  return last ? `${surname}○${last}` : `${surname}○`
+}
+
+function buildBigDataMembers(): BigDataMember[] {
+  const males: BigDataMember[] = []
+  const females: BigDataMember[] = []
+
+  for (let i = 0; i < 50; i++) {
+    const ageM = 26 + (i % 14)
+    const ageF = 25 + ((i + 3) % 15)
+    const surnameM = BD_SURNAMES[i % BD_SURNAMES.length]
+    const surnameF = BD_SURNAMES[(i + 9) % BD_SURNAMES.length]
+    const givenM = BD_GIVEN_MALE[(i * 3) % BD_GIVEN_MALE.length]
+    const givenF = BD_GIVEN_FEMALE[(i * 5) % BD_GIVEN_FEMALE.length]
+    const jobM = BD_JOBS[i % BD_JOBS.length]
+    const jobF = BD_JOBS[(i + 5) % BD_JOBS.length]
+
+    males.push({
+      id: i * 2,
+      line: `${maskName(surnameM, givenM, i * 2)} | ${ageM}세 | ${jobM} | 남`,
+      status: '활동중',
+    })
+    females.push({
+      id: i * 2 + 1,
+      line: `${maskName(surnameF, givenF, i * 2 + 1)} | ${ageF}세 | ${jobF} | 여`,
+      status: '활동중',
+    })
+  }
+
+  const mixed: BigDataMember[] = []
+  for (let i = 0; i < 50; i++) {
+    mixed.push(males[i], females[i])
+  }
+  return mixed
+}
+
+const BIGDATA_MEMBERS = buildBigDataMembers()
+
+function PrMemberTicker({ members }: { members: readonly BigDataMember[] }) {
+  const trackItems = useMemo(() => [...members, ...members], [members])
+
+  return (
+    <div className="prMemberTicker card" aria-label="매칭 성사 중 회원 목록">
+      <div className="prMemberTickerViewport">
+        <ul className="prMemberTickerTrack">
+          {trackItems.map((m, i) => (
+            <li key={`${m.id}-${i}`} className="prMemberRow">
+              <span className="prMemberLine">{m.line}</span>
+              <span className="prMemberPill">{m.status}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  )
+}
 
 const PROCESS_STEPS: {
   num: string
@@ -69,50 +157,58 @@ const PROCESS_STEPS: {
   body: string
   extra?: string
   reverse?: boolean
+  imageSrc?: string
 }[] = [
   {
     num: '01',
-    title: '상담 진행 | 회원님을 알아가는 과정',
+    title: '상담 진행 | 회원님 이해하기',
     body:
-      '회원님의 성향, 연애 가치관, 선호 조건을 상세히 파악하여 최적의 매칭을 진행합니다. 또한, 상대방에게도 회원님의 매력을 효과적으로 소개할 수 있도록 돕습니다.',
-    extra: '· 필요 서류를 정확히 제출해 주시면 더욱 원활한 진행이 가능합니다.',
+      '성향과 연애 가치관, 이상형 조건을 기반으로 맞춤 매칭을 진행합니다.\n회원님의 매력을 효과적으로 전달할 수 있도록 함께 준비합니다.',
+    extra: '· 원활한 진행을 위해 관련 서류는 정확히 제출해 주시기 바랍니다.',
+    imageSrc: '/steps/step-01-consultation.png',
   },
   {
     num: '02',
-    title: '상대 프로필카드 수령 | 맞춤형 이상형 매칭',
+    title: '상대 프로필 확인 | 맞춤 매칭 제안',
     body:
-      '상담 내용을 바탕으로 회원님의 매력을 담은 프로필 카드를 제작합니다. 회원님의 성향과 조건에 맞춰 신중하게 선별된 이상형의 프로필 카드를 전달해 드립니다. 프로필을 확인한 후, 수락 또는 거절 의사를 전달해 주세요.',
+      '전담 매니저가 회원님 프로필 카드를 완성합니다.\n맞춤 선별된 상대 프로필을 안내해 드리며, 수락 여부는 회원님이 결정하시면 됩니다.',
     reverse: true,
+    imageSrc: '/steps/step-02-profile-matching.png',
   },
   {
     num: '03',
-    title: '매칭 성사, 일정 조율 | 완벽한 만남 준비',
+    title: '만남 확정 | 일정 맞추기',
     body:
-      '거리, 취향 등을 고려하여 가장 설레는 장소와 시간을 함께 조율합니다. 만남 전까지 전담 매니저가 소통 창구를 유지해 드립니다.',
+      '상호 수락으로 매칭이 확정됩니다.\n일정·장소는 신중하게 조율하며, 만남 전 과정에서도 전담 매니저가 안내해 드립니다.\n일정이 확정된 후, 일방적인 변심으로 인해 취소되는 경우 취소 당사자에게 패널티가 부과됩니다.',
+    extra:
+      '매칭 횟수 2회 차감 (다회권 회원)\n1회권 회원의 경우 영구 탈퇴 처리\n* 매칭이 파기된 경우, 회원님의 매칭권은 차감되지 않습니다.',
+    imageSrc: '/steps/step-03-schedule-confirm.png',
   },
   {
     num: '04',
-    title: '두근두근 데이트 | 만남의 시작',
+    title: '첫 만남 | 데이트 진행',
     body:
-      '최적의 데이트 장소 추천 및 시간 조율을 진행합니다. 데이트 전날, 비상연락망으로 오픈채팅방을 개설하여 원활한 소통을 지원합니다. 약속 당일 30분 이상 지각 시, 매칭 횟수 차감 불이익이 발생합니다.',
+      '약속 당일, 편안한 분위기에서 첫 만남을 진행합니다.\n만남 전날 오픈채팅방을 열어 두 분의 소통을 돕고, 당일에도 매니저가 지원합니다.\n약속 당일 30분 이상 지각 시, 매칭 횟수 차감 불이익이 발생합니다.',
     extra: '* 1회 차감 (단, 사전 양해를 구한 경우 제외)',
     reverse: true,
+    imageSrc: '/steps/step-04-first-meeting.png',
   },
   {
     num: '05',
-    title: '애프터 케어 서비스 | 지속적인 피드백과 개선',
+    title: '애프터 케어 | 지속 매칭 관리',
     body:
-      '만남 이후, 애프터 진행 여부 및 상대방의 피드백을 공유해 드립니다. 회원님의 가장 매력적인 포인트와 보완할 점을 분석하여 더욱 성공적인 만남을 지원합니다. 개별 맞춤 피드백을 통해 회원님만의 특별한 매력을 찾아 최적의 매칭을 이어갑니다.',
-    extra:
-      '· 내반쪽은 단순한 소개팅을 넘어, 회원님의 인연을 소중히 만들어갑니다. 보다 신뢰할 수 있는 매칭을 위해 최선을 다하겠습니다.',
+      '만남 후, 애프터 진행 여부와 상대방 피드백을 전달해 드립니다.\n매력 포인트와 보완할 점을 정리해, 다음 만남을 위한 맞춤 매칭을 이어갑니다.',
+    imageSrc: '/steps/step-05-aftercare.png',
   },
 ]
 
 export function LandingPostRecommendSections() {
+  const member = useMemberSession()
+  const applyTo = member ? '/consult' : '/login'
   return (
     <div className="pr">
       {/* 1. SERVICE 소개 */}
-      <section className="prBlock section" aria-labelledby="pr-svc-title">
+      {/* <section className="prBlock section" aria-labelledby="pr-svc-title">
         <div className="container">
           <header className="prHead">
             <p className="prEyebrow">SERVICE</p>
@@ -120,36 +216,46 @@ export function LandingPostRecommendSections() {
               내반쪽 만남보장 서비스 안내
             </h2>
           </header>
-          <div className="prSplit">
-            <div className="prStack">
-              <span className="prBadge" aria-hidden="true">
+          <article className="prSvcCard">
+            <div className="prSvcCardHead">
+              <span className="prSvcBadge" aria-hidden="true">
                 01
               </span>
-              <p className="prLead">소개팅 + 결정사의 장점을 결합한</p>
-              <h3 className="prH3">매니저 전담 케어 시스템</h3>
-              <p className="prBody muted">
-                전담 매니저가 소개팅 조건 분석을 통해 당신의 이상형을 찾아드립니다!
+              <div className="prSvcCardTitles">
+                <p className="prSvcLead">앱처럼 편하고, 결정사처럼 신뢰 있는</p>
+                <h3 className="prSvcTitle">1:1 매니저 매칭 케어</h3>
+              </div>
+            </div>
+
+            <p className="prSvcDesc muted">조건 분석부터 매칭까지, 전담 매니저가 끝까지 함께합니다.</p>
+
+            <ul className="prSvcFeatures">
+              {SERVICE_FEATURES.map((feature, index) => (
+                <li key={feature.title} className="prSvcFeature">
+                  <span className="prSvcFeatureNum" aria-hidden="true">
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                  <h4 className="prSvcFeatureTitle">{feature.title}</h4>
+                  <p className="prSvcFeatureDesc muted">{feature.desc}</p>
+                </li>
+              ))}
+            </ul>
+
+            <div className="prSvcCardFoot">
+              <p className="prSvcNote muted">
+                매니저 상담으로 조건을 설정하고, 맞지 않으면 다시 말씀해 주세요. 이상형에 맞는 분으로{' '}
+                <strong>소개팅을 진행</strong>해 드립니다.
               </p>
-              <Link className="btn btnPrimary prCta" to="/join">
+              <Link className="btn landingApplyBtn prSvcCta" to={applyTo}>
                 소개팅 신청
               </Link>
             </div>
-            <div className="prMediaPanel" aria-hidden="true">
-              <div className="prMediaPanelGlow" />
-              <div className="prMediaCard">
-                <p className="prMediaCardTitle">내가 원하는 이상형 매칭</p>
-                <p className="prMediaCardText">
-                  매니저와의 상담을 통해 회원님의 소개팅 조건을 설정합니다. 나의 조건과 맞지 않는다면 말씀해 주세요! 나의 이상형에 맞는 분으로{' '}
-                  <strong>소개팅을 진행해</strong> 드립니다.
-                </p>
-              </div>
-            </div>
-          </div>
+          </article>
         </div>
-      </section>
+      </section> */}
 
       {/* 2. 결정사 프로세스 카드 */}
-      <section className="prBlock section prBlock--tight" aria-labelledby="pr-process-title">
+      {/* <section className="prBlock section prBlock--tight" aria-labelledby="pr-process-title">
         <div className="container">
           <article className="prHighlightCard">
             <div className="prHighlightArt" aria-hidden="true">
@@ -166,10 +272,10 @@ export function LandingPostRecommendSections() {
             </p>
           </article>
         </div>
-      </section>
+      </section> */}
 
       {/* 3. 신원 검증 (회색) */}
-      <section className="prBlock section prBlock--gray" aria-labelledby="pr-id-title">
+      {/* <section className="prBlock section prBlock--gray" aria-labelledby="pr-id-title">
         <div className="container">
           <div className="prSplit prSplit--alignStart">
             <div className="prStack">
@@ -202,10 +308,10 @@ export function LandingPostRecommendSections() {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* 4. 애프터 케어 메인 */}
-      <section className="prBlock section" aria-labelledby="pr-after-title">
+      {/* <section className="prBlock section" aria-labelledby="pr-after-title">
         <div className="container">
           <div className="prSplit prSplit--alignStart">
             <div className="prStack">
@@ -239,10 +345,10 @@ export function LandingPostRecommendSections() {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* 5. 애프터 케어 카드 (중앙) */}
-      <section className="prBlock section prBlock--tight" aria-labelledby="pr-after-card-title">
+      {/* <section className="prBlock section prBlock--tight" aria-labelledby="pr-after-card-title">
         <div className="container">
           <article className="prSoloCard">
             <div className="prSoloCardArt" aria-hidden="true" />
@@ -256,32 +362,27 @@ export function LandingPostRecommendSections() {
             </p>
           </article>
         </div>
-      </section>
+      </section> */}
 
       {/* 6. BIG DATA */}
       <section className="prBlock section prBlock--lavender" aria-labelledby="pr-bd-title">
         <div className="container">
+          <div className="sectionHeader center prBigDataHeader">
+            <p className="recommendEyebrow">BIG DATA</p>
+            <h2 id="pr-bd-title">내반쪽 회원 현황</h2>
+          </div>
+
           <div className="prBigRow">
             <div className="prBigText">
-              <p className="prEyebrow">BIG DATA</p>
-              <h2 id="pr-bd-title" className="prH2 prH2--left">
-                매칭이 성사중인 회원
-              </h2>
+              <h3 className="prBigSubTitle">지금 만남을 기다리는 회원</h3>
               <p className="prBody muted">
-                당신의 인연이 될 다양한 회원분들이 내반쪽에서 만남을 기다리고 있습니다.
+                내반쪽에는 진지하게 만남을 원하는 분들이 꾸준히 모이고 있습니다.
               </p>
-              <Link className="btn btnGhost prCta prCta--dark" to="/join">
+              <Link className="btn landingApplyBtn prCta" to={applyTo}>
                 소개팅 신청
               </Link>
             </div>
-            <ul className="prMemberList card">
-              {BIGDATA_MEMBERS.map((m) => (
-                <li key={m.line} className="prMemberRow">
-                  <span className="prMemberLine">{m.line}</span>
-                  <span className="prMemberPill">{m.status}</span>
-                </li>
-              ))}
-            </ul>
+            <PrMemberTicker members={BIGDATA_MEMBERS} />
           </div>
           <div className="prBigRow prBigRow--reverse">
             <div className="prStats card">
@@ -299,12 +400,11 @@ export function LandingPostRecommendSections() {
               </div>
             </div>
             <div className="prBigText">
-              <p className="prEyebrow">BIG DATA</p>
-              <h2 className="prH2 prH2--left">철저한 남녀 성비 유지</h2>
+              <h3 className="prBigSubTitle">남녀 회원 비율을 꾸준히 관리해요</h3>
               <p className="prBody muted">
-                20대부터 40대까지 폭넓은 연령층, 다양한 직종에 종사하는 매력적인 회원 풀로 내 조건에 맞는 인연을 만나게 해드립니다!
+                남녀 회원 수를 균형 있게 맞춰, 더 자연스럽고 공정한 매칭이 가능합니다.
               </p>
-              <Link className="btn btnGhost prCta prCta--dark" to="/join">
+              <Link className="btn landingApplyBtn prCta" to={applyTo}>
                 소개팅 신청
               </Link>
             </div>
@@ -312,15 +412,15 @@ export function LandingPostRecommendSections() {
         </div>
       </section>
 
-      {/* 7. 검증 + 진행 절차 도입 */}
-      <section className="prBlock section" aria-labelledby="pr-flow-title">
+      {/* 7. 회원 검증 */}
+      <section className="prBlock section prBlock--verify" aria-labelledby="pr-verify-title">
         <div className="container">
           <header className="prHead">
-            <p className="prEyebrow">내반쪽 진행방법</p>
-            <h2 id="pr-flow-title" className="prH2">
-              매칭은 어떻게 진행이 되나요?
+            <p className="prEyebrow">회원 검증</p>
+            <h2 id="pr-verify-title" className="prH2">
+              가입 전, 이렇게 확인해요
             </h2>
-            <p className="prSubCenter muted">등록전 회원가입 검증</p>
+            <p className="prSubCenter muted">본인·직업·신분을 단계별로 검증합니다</p>
             <div className="prChevron" aria-hidden="true">
               ⌄
             </div>
@@ -337,26 +437,39 @@ export function LandingPostRecommendSections() {
               </li>
             ))}
           </ul>
-          <header className="prHead prHead--spaced">
-            <p className="prEyebrow">내반쪽 진행절차</p>
-            <h2 className="prH2">매칭 서비스 진행 절차</h2>
-            <p className="prIntroWide muted">
-              내반쪽은 회원님의 성향과 가치관을 바탕으로 최적의 인연을 찾아드리는 맞춤형 매칭 서비스입니다. 아래 절차에 따라 신뢰할 수
-              있는 만남을 제공합니다.
-            </p>
-          </header>
         </div>
       </section>
 
-      {/* 8–9. 단계별 상세 */}
-      <section className="prBlock section prBlock--steps" aria-label="매칭 서비스 단계별 안내">
+      {/* 8. 매칭 진행 절차 + 단계별 상세 */}
+      <section className="prBlock section prBlock--steps" aria-labelledby="pr-process-title">
         <div className="container">
+          <header className="prHead">
+            <p className="prEyebrow">내반쪽 진행절차</p>
+            <h2 id="pr-process-title" className="prH2">
+              매칭 서비스 진행 절차
+            </h2>
+            <p className="prIntroWide muted">
+              검증된 회원만을 대상으로, 회원님에게 맞는 분을 신중하게 소개합니다.
+              <br />
+              상담부터 만남 후 피드백까지, 단계별로 안내해 드립니다.
+            </p>
+          </header>
           {PROCESS_STEPS.map((step) => (
             <article
               key={step.num}
               className={`prStepRow${step.reverse ? ' prStepRow--reverse' : ''}`}
             >
-              <div className={`prStepVisual prStepVisual--${step.num}`} aria-hidden="true" />
+              <div className={`prStepVisual prStepVisual--${step.num}`} aria-hidden="true">
+                {step.imageSrc ? (
+                  <img
+                    src={step.imageSrc}
+                    alt=""
+                    className="prStepVisualImg"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                ) : null}
+              </div>
               <div className="prStepText">
                 <h3 className="prStepTitle">
                   {step.num}. {step.title}

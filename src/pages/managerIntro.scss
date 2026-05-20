@@ -2,57 +2,70 @@
 
 .managerIntroPage {
   min-height: 100vh;
-  background: #f8fafc;
+  background:
+    radial-gradient(circle at top left, rgba(167, 212, 255, 0.28), transparent 34%),
+    radial-gradient(circle at top right, rgba(255, 188, 221, 0.24), transparent 32%),
+    #fff;
   color: $text;
 }
 
 .managerHero {
   position: relative;
-  padding: 56px 0 48px;
   overflow: hidden;
-  color: #fff;
-  text-align: center;
+  padding: 0 0 64px;
+  background:
+    linear-gradient(135deg, rgba(174, 216, 255, 0.92), rgba(221, 196, 255, 0.9) 55%, rgba(255, 207, 232, 0.92)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0));
+}
 
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, #6b5cff 0%, #4f7cff 42%, #2b4acb 100%);
-    z-index: 0;
-  }
+.managerHero::before,
+.managerHero::after {
+  content: '';
+  position: absolute;
+  inset: auto;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  filter: blur(2px);
+}
 
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    opacity: 0.22;
-    background: radial-gradient(ellipse 120% 80% at 50% 100%, rgba(0, 0, 0, 0.35), transparent 55%);
-    z-index: 0;
-  }
+.managerHero::before {
+  top: -120px;
+  right: 9%;
+  width: 320px;
+  height: 320px;
+}
+
+.managerHero::after {
+  bottom: -140px;
+  left: 10%;
+  width: 260px;
+  height: 260px;
 }
 
 .managerHeroInner {
   position: relative;
   z-index: 1;
+  padding-top: 28px;
+  text-align: center;
 }
 
 .managerHeroTitle {
-  margin: 0 0 8px;
-  font-size: clamp(26px, 4vw, 34px);
+  margin: 0;
+  font-size: clamp(38px, 6vw, 58px);
   font-weight: 900;
-  letter-spacing: -0.03em;
-  text-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  color: #fff;
 }
 
-.managerHeroSub {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 600;
-  opacity: 0.92;
+.managerHeroLead {
+  width: min(720px, 100%);
+  margin: 18px auto 0;
+  font-size: 17px;
+  line-height: 1.75;
+  color: rgba(255, 255, 255, 0.92);
 }
 
 .managerMain {
-  padding: 36px 0 72px;
+  padding: 48px 0 80px;
 }
 
 .managerGrid {
@@ -101,13 +114,6 @@
   flex: 1;
 }
 
-.managerCardHead {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
 .managerCardName {
   margin: 0;
   font-size: 17px;
@@ -116,20 +122,41 @@
   letter-spacing: -0.02em;
 }
 
-.managerStars {
-  display: flex;
-  gap: 2px;
-  flex-shrink: 0;
+.managerCardIntro {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.72);
 }
 
-.managerStar {
-  font-size: 15px;
-  line-height: 1;
-  color: rgba(15, 23, 42, 0.18);
+.managerCardTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
 
-  &.on {
-    color: #3b6cff;
-  }
+.managerCardTag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(90, 67, 179, 0.08);
+  color: #5437bf;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.managerCardConsult {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(122, 167, 255, 0.1);
+  font-size: 12px;
+  line-height: 1.55;
+  font-weight: 700;
+  color: rgba(30, 41, 59, 0.88);
 }
 
 .managerStat {
@@ -146,25 +173,66 @@
   font-variant-numeric: tabular-nums;
 }
 
-.managerCardBtn {
-  margin-top: auto;
-  display: block;
-  width: 100%;
-  padding: 12px 14px;
-  border: none;
+.managerCta {
+  margin-top: 36px;
+  padding: 28px 24px;
+  text-align: center;
+  border: 1px solid rgba(95, 78, 173, 0.12);
+  box-shadow: 0 20px 40px rgba(98, 78, 174, 0.08);
+}
+
+.managerCtaTitle {
+  margin: 0;
+  font-size: clamp(22px, 3vw, 28px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: $text-strong;
+}
+
+.managerCtaLead {
+  margin: 12px 0 0;
+  font-size: 15px;
+  line-height: 1.7;
+  font-weight: 600;
+  color: rgba(51, 65, 85, 0.92);
+  text-align: center;
+}
+
+.managerCtaActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.managerCtaBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 200px;
+  padding: 13px 20px;
   border-radius: 12px;
   font-size: 14px;
   font-weight: 800;
-  cursor: pointer;
-  text-align: center;
   text-decoration: none;
-  background: linear-gradient(135deg, #4c3bcf 0%, #2f4ad4 100%);
-  color: #fff;
-  box-shadow: 0 10px 28px rgba(47, 74, 212, 0.35);
+  transition: filter 0.16s ease;
 
   &:hover {
     filter: brightness(1.05);
   }
+}
+
+.managerCtaBtn--primary {
+  background: linear-gradient(135deg, #4c3bcf 0%, #2f4ad4 100%);
+  color: #fff;
+  box-shadow: 0 10px 28px rgba(47, 74, 212, 0.35);
+}
+
+.managerCtaBtn--secondary {
+  background: #fff;
+  color: rgba(15, 23, 42, 0.82);
+  border: 1px solid rgba(15, 23, 42, 0.12);
 }
 
 .managerPagination {
@@ -232,4 +300,18 @@
   color: #b91c1c;
   font-weight: 700;
   font-size: 14px;
+}
+
+@media (max-width: 720px) {
+  .managerHero {
+    padding-bottom: 52px;
+  }
+
+  .managerHeroInner {
+    padding-top: 24px;
+  }
+
+  .managerHeroLead {
+    font-size: 15px;
+  }
 }

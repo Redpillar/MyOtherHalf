@@ -2,7 +2,7 @@ import { spawn, type ChildProcess } from 'node:child_process'
 import type { ServerResponse } from 'node:http'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { defineConfig } from 'vite'
+import { defineConfig, type PreviewServer, type ViteDevServer } from 'vite'
 import react from '@vitejs/plugin-react'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -10,6 +10,8 @@ const apiEntry = join(__dirname, 'server', 'index.mjs')
 
 let apiChild: ChildProcess | null = null
 let apiHealthTimer: ReturnType<typeof setInterval> | null = null
+
+type PreviewServerWithWatcher = PreviewServer & Pick<ViteDevServer, 'watcher'>
 
 async function isApiHealthy(): Promise<boolean> {
   try {
@@ -83,7 +85,7 @@ function clearApiHealthLoop() {
 function localApiPlugin() {
   return {
     name: 'demo-local-api',
-    configureServer(server) {
+    configureServer(server: ViteDevServer) {
       const onServerFileChange = (file: string) => {
         const norm = file.replace(/\\/g, '/')
         if (!norm.includes('/server/')) return
@@ -142,7 +144,8 @@ function localApiPlugin() {
         return cleanupWithWatcher
       })()
     },
-    configurePreviewServer(server) {
+    configurePreviewServer(server: PreviewServer) {
+      const previewServer = server as PreviewServerWithWatcher
       const onServerFileChange = (file: string) => {
         const norm = file.replace(/\\/g, '/')
         if (!norm.includes('/server/')) return
@@ -151,7 +154,7 @@ function localApiPlugin() {
       }
 
       const cleanupWithWatcher = () => {
-        server.watcher.off('change', onServerFileChange)
+        previewServer.watcher.off('change', onServerFileChange)
         clearApiHealthLoop()
         stopApiServer()
       }
@@ -171,7 +174,7 @@ function localApiPlugin() {
         })()
       }
 
-      server.watcher.on('change', onServerFileChange)
+      previewServer.watcher.on('change', onServerFileChange)
 
       return (async () => {
         if (await isApiHealthy()) {
