@@ -6,7 +6,7 @@ import {
   type AdminUiSettings,
 } from '../admin/adminUiSettings'
 import { useAdminToken } from '../admin/adminSession'
-import { AdminMenu } from '../components/AdminMenu'
+import { AdminListBack } from '../components/AdminListBack'
 import { SiteHeader } from '../components/SiteHeader'
 import './admin.scss'
 
@@ -33,14 +33,15 @@ export function AdminSettings() {
 
       <main className="adminMain">
         <div className="container adminInner" style={{ maxWidth: 560 }}>
-          <AdminMenu />
-
-          <div className="adminHead">
-            <h1 className="adminTitle">관리자 설정</h1>
-            <p className="adminHint muted">
-              <strong>관리자 메뉴</strong>와 <strong>메인 사이트 헤더</strong> 링크는 각 설정 페이지에서 켜고 끌 수 있습니다. 아래 옵션은 이
-              서비스에 저장됩니다.
-            </p>
+          <div className="adminDetailHead">
+            <AdminListBack to="/admin/dashboard" label="관리자 홈" />
+            <div className="adminHead" style={{ marginTop: 12 }}>
+              <h1 className="adminTitle">관리자 설정</h1>
+              <p className="adminHint muted">
+                <strong>관리자 메뉴</strong>와 <strong>메인 사이트 헤더</strong> 링크는 각 설정 페이지에서 켜고 끌 수 있습니다. 아래 옵션은 이
+                서비스에 저장됩니다.
+              </p>
+            </div>
           </div>
 
           {token ? (

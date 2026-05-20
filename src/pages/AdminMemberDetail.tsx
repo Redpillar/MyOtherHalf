@@ -13,7 +13,7 @@ import { apiFetch } from '../lib/apiFetch'
 import type { AdminMember, ConsultationStatus } from '../admin/memberTypes'
 import { adminConsultationStatusLabel, ADMIN_CONSULTATION_STATUS_OPTIONS } from '../consult/consultTypes'
 import { clearAdminToken, getAdminToken, useAdminToken } from '../admin/adminSession'
-import { AdminMenu } from '../components/AdminMenu'
+import { AdminListBack } from '../components/AdminListBack'
 import './signup.scss'
 import './admin.scss'
 
@@ -430,12 +430,8 @@ export function AdminMemberDetail() {
 
       <main className="adminMain">
         <div className="container adminInner">
-          <AdminMenu />
-
           <div className="adminDetailHead">
-            <button type="button" className="adminDetailBackBtn" onClick={() => navigate('/admin')}>
-              ← 회원 목록
-            </button>
+            <AdminListBack to="/admin" label="회원 목록" />
             <div className="adminDetailHeadRow">
               <div className="adminDetailHeadMain">
                 <h1 className="adminTitle">회원 상세</h1>

@@ -1,7 +1,7 @@
 import { type FormEvent, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { clearAdminToken, useAdminToken } from '../admin/adminSession'
-import { AdminMenu } from '../components/AdminMenu'
+import { AdminListBack } from '../components/AdminListBack'
 import { SiteHeader } from '../components/SiteHeader'
 import { apiFetch, readJsonResponse } from '../lib/apiFetch'
 import './admin.scss'
@@ -63,12 +63,8 @@ export function AdminNoticeCreate() {
 
       <main className="adminMain">
         <div className="container adminInner" style={{ maxWidth: 760 }}>
-          <AdminMenu />
-
           <div className="adminDetailHead">
-            <button type="button" className="adminDetailBackBtn" onClick={() => navigate('/admin/notices')}>
-              ← 공지 목록
-            </button>
+            <AdminListBack to="/admin/notices" label="공지 목록" />
             <div className="adminHead" style={{ marginTop: 12 }}>
               <h1 className="adminTitle">공지 등록</h1>
               <p className="adminHint muted">메인 사이트 공지사항 페이지에 노출될 글을 등록합니다.</p>

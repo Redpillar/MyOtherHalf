@@ -1,7 +1,7 @@
 import { type FormEvent, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { clearAdminToken, useAdminToken } from '../admin/adminSession'
-import { AdminMenu } from '../components/AdminMenu'
+import { AdminListBack } from '../components/AdminListBack'
 import { SiteHeader } from '../components/SiteHeader'
 import { apiFetch, readJsonResponse } from '../lib/apiFetch'
 import './admin.scss'
@@ -71,12 +71,8 @@ export function AdminReviewCreate() {
 
       <main className="adminMain">
         <div className="container adminInner" style={{ maxWidth: 760 }}>
-          <AdminMenu />
-
           <div className="adminDetailHead">
-            <button type="button" className="adminDetailBackBtn" onClick={() => navigate('/admin/reviews')}>
-              ← 후기 목록
-            </button>
+            <AdminListBack to="/admin/reviews" label="후기 목록" />
             <div className="adminHead" style={{ marginTop: 12 }}>
               <h1 className="adminTitle">후기 등록</h1>
               <p className="adminHint muted">공개 후기 페이지에 노출할 커플 후기를 등록합니다.</p>

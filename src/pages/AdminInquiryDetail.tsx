@@ -2,7 +2,7 @@ import { type FormEvent, useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import type { AdminInquiry, InquiryStatus } from '../inquiry/inquiryTypes'
 import { clearAdminToken, useAdminToken } from '../admin/adminSession'
-import { AdminMenu } from '../components/AdminMenu'
+import { AdminListBack } from '../components/AdminListBack'
 import { SiteHeader } from '../components/SiteHeader'
 import { apiFetch, readJsonResponse } from '../lib/apiFetch'
 import './admin.scss'
@@ -112,12 +112,8 @@ export function AdminInquiryDetail() {
 
       <main className="adminMain">
         <div className="container adminInner" style={{ maxWidth: 720 }}>
-          <AdminMenu />
-
           <div className="adminDetailHead">
-            <button type="button" className="adminDetailBackBtn" onClick={() => navigate('/admin/inquiries')}>
-              ← 문의 목록
-            </button>
+            <AdminListBack to="/admin/inquiries" label="문의 목록" />
             <div className="adminHead" style={{ marginTop: 12 }}>
               <h1 className="adminTitle">문의 상세 #{id || '—'}</h1>
             </div>

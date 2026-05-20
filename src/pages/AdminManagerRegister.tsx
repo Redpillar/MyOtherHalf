@@ -1,7 +1,7 @@
 import { type FormEvent, useCallback, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { clearAdminToken, useAdminToken } from '../admin/adminSession'
-import { AdminMenu } from '../components/AdminMenu'
+import { AdminListBack } from '../components/AdminListBack'
 import { SiteHeader } from '../components/SiteHeader'
 import { apiFetch } from '../lib/apiFetch'
 import './signup.scss'
@@ -96,11 +96,12 @@ export function AdminManagerRegister() {
 
       <main className="adminMain">
         <div className="container adminInner" style={{ maxWidth: 520 }}>
-          <AdminMenu />
-
-          <div className="adminHead">
-            <h1 className="adminTitle">매니저 등록</h1>
-            <p className="adminHint muted">등록한 매니저는 매니저 소개 페이지에 노출됩니다.</p>
+          <div className="adminDetailHead">
+            <AdminListBack to="/admin/managers" label="매니저 목록" />
+            <div className="adminHead" style={{ marginTop: 12 }}>
+              <h1 className="adminTitle">매니저 등록</h1>
+              <p className="adminHint muted">등록한 매니저는 매니저 소개 페이지에 노출됩니다.</p>
+            </div>
           </div>
 
           {!token ? (

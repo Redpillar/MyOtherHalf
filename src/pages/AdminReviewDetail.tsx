@@ -1,7 +1,7 @@
 import { type FormEvent, useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { clearAdminToken, useAdminToken } from '../admin/adminSession'
-import { AdminMenu } from '../components/AdminMenu'
+import { AdminListBack } from '../components/AdminListBack'
 import { SiteHeader } from '../components/SiteHeader'
 import { apiFetch, readJsonResponse } from '../lib/apiFetch'
 import type { AdminReview } from '../review/reviewTypes'
@@ -139,12 +139,8 @@ export function AdminReviewDetail() {
 
       <main className="adminMain">
         <div className="container adminInner" style={{ maxWidth: 760 }}>
-          <AdminMenu />
-
           <div className="adminDetailHead">
-            <button type="button" className="adminDetailBackBtn" onClick={() => navigate('/admin/reviews')}>
-              ← 후기 목록
-            </button>
+            <AdminListBack to="/admin/reviews" label="후기 목록" />
             <div className="adminHead" style={{ marginTop: 12 }}>
               <h1 className="adminTitle">커플 후기 상세 #{id || '—'}</h1>
             </div>

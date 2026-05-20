@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import type { AdminManagerRow } from '../admin/managerTypes'
 import { formatManagerTagsInput } from '../admin/managerTypes'
 import { clearAdminToken, useAdminToken } from '../admin/adminSession'
-import { AdminMenu } from '../components/AdminMenu'
+import { AdminListBack } from '../components/AdminListBack'
 import { SiteHeader } from '../components/SiteHeader'
 import { apiFetch, readJsonResponse } from '../lib/apiFetch'
 import './signup.scss'
@@ -128,12 +128,8 @@ export function AdminManagerEdit() {
 
       <main className="adminMain">
         <div className="container adminInner" style={{ maxWidth: 560 }}>
-          <AdminMenu />
-
           <div className="adminDetailHead">
-            <button type="button" className="adminDetailBackBtn" onClick={() => navigate('/admin/managers')}>
-              ← 매니저 목록
-            </button>
+            <AdminListBack to="/admin/managers" label="매니저 목록" />
             <div className="adminHead" style={{ marginTop: 12 }}>
               <h1 className="adminTitle">매니저 수정</h1>
               {Number.isFinite(id) ? <p className="adminHint muted">매니저 ID · {id}</p> : null}

@@ -2,7 +2,7 @@ import { type FormEvent, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import type { RecommendTone } from '../lib/recommendationTypes'
 import { clearAdminToken, useAdminToken } from '../admin/adminSession'
-import { AdminMenu } from '../components/AdminMenu'
+import { AdminListBack } from '../components/AdminListBack'
 import { SiteHeader } from '../components/SiteHeader'
 import { apiFetch, readJsonResponse } from '../lib/apiFetch'
 import './admin.scss'
@@ -63,12 +63,8 @@ export function AdminRecommendationCreate() {
 
       <main className="adminMain">
         <div className="container adminInner" style={{ maxWidth: 760 }}>
-          <AdminMenu />
-
           <div className="adminDetailHead">
-            <button type="button" className="adminDetailBackBtn" onClick={() => navigate('/admin/recommendations')}>
-              ← 문구 목록
-            </button>
+            <AdminListBack to="/admin/recommendations" label="문구 목록" />
             <div className="adminHead" style={{ marginTop: 12 }}>
               <h1 className="adminTitle">문구 추가</h1>
               <p className="adminHint muted">메인 페이지 추천 캐러셀에 노출될 문구를 추가합니다.</p>
