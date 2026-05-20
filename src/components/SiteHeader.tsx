@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { siteNavItems } from '../config/nav'
 import { clearAdminToken, useAdminToken } from '../admin/adminSession'
 import { setMemberSession, useMemberSession } from '../lib/memberSession'
@@ -20,6 +20,7 @@ const adminNavItems: { id: string; to: string; label: string }[] = [
 
 export function SiteHeader() {
   const navigate = useNavigate()
+  const location = useLocation()
   const member = useMemberSession()
   const adminToken = useAdminToken()
   const navConfig = useSiteHeaderNavConfig()
@@ -27,8 +28,22 @@ export function SiteHeader() {
   const visibleItems = siteNavItems.filter((item) => navVis[item.id])
   const isAdmin = Boolean(adminToken)
   const [newInquiryCount, setNewInquiryCount] = useState<number>(0)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const adminInquiryLink = useMemo(() => adminNavItems.find((x) => x.id === 'admin-inquiries')?.to, [])
+
+  useEffect(() => {
+    setMenuOpen(false)
+  }, [location.pathname, location.search, location.hash])
+
+  useEffect(() => {
+    if (!menuOpen) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [menuOpen])
 
   useEffect(() => {
     if (!isAdmin || !adminToken) {
@@ -61,84 +76,119 @@ export function SiteHeader() {
     }
   }, [isAdmin, adminToken])
 
+  const navLinks: ReactNode = isAdmin ? (
+    adminNavItems.map((item) => (
+      <Link key={item.id} className="navLink" to={item.to} onClick={() => setMenuOpen(false)}>
+        {item.label}
+        {item.to === adminInquiryLink && newInquiryCount > 0 ? (
+          <span className="navBadge" aria-label={`신규 문의 ${newInquiryCount}건`}>
+            N
+          </span>
+        ) : null}
+      </Link>
+    ))
+  ) : (
+    visibleItems.map((item) =>
+      item.href.startsWith('/') && !item.href.includes('#') ? (
+        <Link
+          key={item.id}
+          className="navLink"
+          to={item.id === 'contact' ? (member ? '/inquiry' : '/inquiry/new') : item.href}
+          onClick={() => setMenuOpen(false)}
+        >
+          {item.label}
+        </Link>
+      ) : (
+        <a key={item.id} className="navLink" href={item.href} onClick={() => setMenuOpen(false)}>
+          {item.label}
+        </a>
+      ),
+    )
+  )
+
+  const authLinks: ReactNode = isAdmin ? (
+    <button
+      type="button"
+      className="navLink siteHeaderLogoutBtn"
+      onClick={() => {
+        clearAdminToken()
+        setMenuOpen(false)
+        navigate('/admin', { replace: true })
+      }}
+    >
+      관리자 로그아웃
+    </button>
+  ) : member ? (
+    <>
+      <button
+        type="button"
+        className="navLink siteHeaderLogoutBtn"
+        onClick={() => {
+          setMemberSession(false)
+          setMenuOpen(false)
+          navigate('/login', { replace: true })
+        }}
+      >
+        로그아웃
+      </button>
+      <Link className="navLink" to="/consult" onClick={() => setMenuOpen(false)}>
+        마이페이지
+      </Link>
+    </>
+  ) : (
+    <>
+      <Link className="navLink" to="/login" onClick={() => setMenuOpen(false)}>
+        로그인
+      </Link>
+      <Link className="navLink" to="/join" onClick={() => setMenuOpen(false)}>
+        회원가입
+      </Link>
+    </>
+  )
+
   return (
     <>
-      <header className="topBar">
+      <header className={`topBar${menuOpen ? ' topBar--menuOpen' : ''}`}>
         <div className="container topBarInner">
           <Link to={isAdmin ? '/admin/dashboard' : '/'} className="brand" style={{ textDecoration: 'none', color: 'inherit' }}>
             <span className="brandMark" aria-hidden="true" />
             <span className="brandName">내반쪽</span>
           </Link>
 
-          <nav className="nav" aria-label="메인 메뉴">
-            {isAdmin
-              ? adminNavItems.map((item) => (
-                  <Link key={item.id} className="navLink" to={item.to}>
-                    {item.label}
-                    {item.to === adminInquiryLink && newInquiryCount > 0 ? (
-                      <span className="navBadge" aria-label={`신규 문의 ${newInquiryCount}건`}>
-                        N
-                      </span>
-                    ) : null}
-                  </Link>
-                ))
-              : visibleItems.map((item) =>
-                  item.href.startsWith('/') && !item.href.includes('#') ? (
-                    <Link
-                      key={item.id}
-                      className="navLink"
-                      to={item.id === 'contact' ? (member ? '/inquiry' : '/inquiry/new') : item.href}
-                    >
-                      {item.label}
-                    </Link>
-                  ) : (
-                    <a key={item.id} className="navLink" href={item.href}>
-                      {item.label}
-                    </a>
-                  ),
-                )}
+          <button
+            type="button"
+            className="topBarMenuBtn"
+            aria-expanded={menuOpen}
+            aria-controls="topBarMobileMenu"
+            onClick={() => setMenuOpen((v) => !v)}
+          >
+            <span className="topBarMenuBtnIcon" aria-hidden="true" />
+            <span className="srOnly">{menuOpen ? '메뉴 닫기' : '메뉴 열기'}</span>
+          </button>
+
+          <nav className="nav topBarNav--desktop" aria-label="메인 메뉴">
+            {navLinks}
           </nav>
 
-          <div className="auth">
-            {isAdmin ? (
-              <button
-                type="button"
-                className="navLink siteHeaderLogoutBtn"
-                onClick={() => {
-                  clearAdminToken()
-                  navigate('/admin', { replace: true })
-                }}
-              >
-                관리자 로그아웃
-              </button>
-            ) : member ? (
-              <>
-                <button
-                  type="button"
-                  className="navLink siteHeaderLogoutBtn"
-                  onClick={() => {
-                    setMemberSession(false)
-                    navigate('/login', { replace: true })
-                  }}
-                >
-                  로그아웃
-                </button>
-                <Link className="navLink" to="/consult">
-                  마이페이지
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link className="navLink" to="/login">
-                  로그인
-                </Link>
-                <Link className="navLink" to="/join">
-                  회원가입
-                </Link>
-              </>
-            )}
-          </div>
+          <div className="auth topBarAuth--desktop">{authLinks}</div>
         </div>
+
+        {menuOpen ? (
+          <>
+            <button
+              type="button"
+              className="topBarMenuBackdrop"
+              aria-label="메뉴 닫기"
+              onClick={() => setMenuOpen(false)}
+            />
+            <div id="topBarMobileMenu" className="topBarMobileMenu">
+              <nav className="topBarMobileNav" aria-label="모바일 메뉴">
+                {navLinks}
+              </nav>
+              <div className="topBarMobileAuth">{authLinks}</div>
+            </div>
+          </>
+        ) : null}
       </header>
       <div className="topBarSpacer" aria-hidden="true" />
     </>
