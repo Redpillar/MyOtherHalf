@@ -8,7 +8,24 @@ import './landing.scss'
 import './signup.scss'
 import './managerIntro.scss'
 
-const PAGE_SIZE = 4
+const DESKTOP_PAGE_MQ = '(min-width: 1101px)'
+
+function useManagerPageSize(): number {
+  const getSize = () =>
+    typeof window !== 'undefined' && window.matchMedia(DESKTOP_PAGE_MQ).matches ? 8 : 4
+
+  const [pageSize, setPageSize] = useState(getSize)
+
+  useEffect(() => {
+    const mq = window.matchMedia(DESKTOP_PAGE_MQ)
+    const onChange = () => setPageSize(mq.matches ? 8 : 4)
+    onChange()
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+
+  return pageSize
+}
 
 function managerPhotoUrl(id: number): string {
   return `/api/managers/${encodeURIComponent(String(id))}/photo`
@@ -16,6 +33,7 @@ function managerPhotoUrl(id: number): string {
 
 export function ManagerIntro() {
   const member = useMemberSession()
+  const pageSize = useManagerPageSize()
   const [managers, setManagers] = useState<PublicManager[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -41,13 +59,13 @@ export function ManagerIntro() {
     void load()
   }, [load])
 
-  const totalPages = Math.max(1, Math.ceil(managers.length / PAGE_SIZE))
+  const totalPages = Math.max(1, Math.ceil(managers.length / pageSize))
   const safePage = Math.min(page, totalPages)
   const pageSlice = useMemo(() => {
     const p = Math.min(page, totalPages)
-    const start = (p - 1) * PAGE_SIZE
-    return managers.slice(start, start + PAGE_SIZE)
-  }, [managers, page, totalPages])
+    const start = (p - 1) * pageSize
+    return managers.slice(start, start + pageSize)
+  }, [managers, page, totalPages, pageSize])
 
   useEffect(() => {
     if (page > totalPages) setPage(totalPages)

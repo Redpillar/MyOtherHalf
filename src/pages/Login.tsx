@@ -1,5 +1,6 @@
 import { type FormEvent, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { BrandLogo } from '../components/BrandLogo'
 import { SiteHeader } from '../components/SiteHeader'
 import { apiFetch, readJsonResponse } from '../lib/apiFetch'
 import { setMemberProfile, setMemberSession } from '../lib/memberSession'
@@ -143,8 +144,7 @@ export function Login() {
       <footer className="loginSiteFooter">
         <div className="container loginSiteFooterInner">
           <div className="loginSiteFooterBrand">
-            <span className="brandMark" aria-hidden="true" />
-            <span className="brandName">내반쪽</span>
+            <BrandLogo className="brandLogo brandLogo--footer" />
           </div>
           <div className="loginSiteFooterMeta">
             <p>

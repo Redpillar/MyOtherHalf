@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { BrandLogo } from './BrandLogo'
 import { siteNavItems } from '../config/nav'
 import { clearAdminToken, useAdminToken } from '../admin/adminSession'
 import { setMemberSession, useMemberSession } from '../lib/memberSession'
@@ -151,8 +152,7 @@ export function SiteHeader() {
       <header className={`topBar${menuOpen ? ' topBar--menuOpen' : ''}`}>
         <div className="container topBarInner">
           <Link to={isAdmin ? '/admin/dashboard' : '/'} className="brand" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <span className="brandMark" aria-hidden="true" />
-            <span className="brandName">내반쪽</span>
+            <BrandLogo />
           </Link>
 
           <button

@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { BrandLogo } from '../components/BrandLogo'
 import { KpiAnimatedBar } from '../components/KpiAnimatedBar'
 import { SiteHeader } from '../components/SiteHeader'
 import { apiFetch, readJsonResponse } from '../lib/apiFetch'
@@ -640,7 +641,6 @@ export function Landing() {
               <div className="bottomCtaBackdrop" aria-hidden="true">
                 <div className="bottomCtaGlow bottomCtaGlow--left" />
                 <div className="bottomCtaGlow bottomCtaGlow--right" />
-                <div className="bottomCtaFigure" />
               </div>
 
               <div className="bottomCtaContent">
@@ -676,8 +676,7 @@ export function Landing() {
         <div className="container footerInner">
           <div className="footerColBrand">
             <div className="brand footerBrand">
-              <span className="brandMark" aria-hidden="true" />
-              <span className="brandName">내반쪽</span>
+              <BrandLogo className="brandLogo brandLogo--footer" />
             </div>
             <p className="muted footerTagline">
               상담은 무료! 5분의 투자로
