@@ -1,5 +1,5 @@
 import { type FormEvent, useCallback, useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import type { AdminManagerRow } from '../admin/managerTypes'
 import { formatManagerTagsInput } from '../admin/managerTypes'
 import { clearAdminToken, useAdminToken } from '../admin/adminSession'
@@ -15,7 +15,6 @@ function managerPhotoUrl(id: number): string {
 
 export function AdminManagerEdit() {
   const { id: idParam } = useParams<{ id: string }>()
-  const navigate = useNavigate()
   const token = useAdminToken()
   const id = idParam && /^\d+$/.test(idParam) ? Number(idParam) : NaN
 
