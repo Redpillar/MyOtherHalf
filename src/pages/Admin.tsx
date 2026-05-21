@@ -7,6 +7,7 @@ import { AdminPager } from '../components/AdminPager'
 import { usePagination } from '../components/AdminPagination'
 import { SiteHeader } from '../components/SiteHeader'
 import { findSidoName, findSigunguName } from '../data/koreaRegions'
+import { formatMemberDateTime } from '../admin/memberFormat'
 import { adminConsultationStatusLabel } from '../consult/consultTypes'
 import { apiFetch, readJsonResponse } from '../lib/apiFetch'
 import './signup.scss'
@@ -135,12 +136,13 @@ export function Admin() {
                       <th>흡연</th>
                       <th>음주</th>
                       <th>가입일시</th>
+                      <th>최근 로그인</th>
                     </tr>
                   </thead>
                   <tbody>
                     {pager.total === 0 ? (
                       <tr>
-                        <td colSpan={15} className="adminEmpty">
+                        <td colSpan={16} className="adminEmpty">
                           등록된 회원이 없습니다.
                         </td>
                       </tr>
@@ -176,7 +178,8 @@ export function Admin() {
                           <td>{m.mbti || '—'}</td>
                           <td>{m.smoke === 'yes' ? '흡연' : '비흡연'}</td>
                           <td>{m.drink === 'yes' ? '음주' : '비음주'}</td>
-                          <td className="adminCellNowrap">{new Date(m.createdAt).toLocaleString('ko-KR')}</td>
+                          <td className="adminCellNowrap">{formatMemberDateTime(m.createdAt)}</td>
+                          <td className="adminCellNowrap">{formatMemberDateTime(m.lastLoginAt)}</td>
                         </tr>
                       ))
                     )}

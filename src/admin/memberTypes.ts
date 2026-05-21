@@ -22,6 +22,8 @@ export type AdminMember = {
   appeal: string
   obligationAgreed: boolean
   createdAt: string
+  /** ISO 8601 — 최근 회원 로그인 시각 */
+  lastLoginAt?: string | null
   photos?: string[]
   photoCount?: number
   locationLat?: number | null
@@ -31,6 +33,8 @@ export type AdminMember = {
   hasLocation?: boolean
   consultationStatus?: ConsultationStatus
   consultationRequestedAt?: string
+  /** 관리자 전용 내부 메모 */
+  adminMemo?: string
 }
 
 export type AdminNearbyMember = {

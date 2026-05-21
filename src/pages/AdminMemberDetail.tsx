@@ -11,6 +11,7 @@ import {
 import { EDUCATION_OPTIONS, isKnownEducation } from '../data/educationLevels'
 import { apiFetch } from '../lib/apiFetch'
 import type { AdminMember, ConsultationStatus } from '../admin/memberTypes'
+import { formatMemberDateTime } from '../admin/memberFormat'
 import { adminConsultationStatusLabel, ADMIN_CONSULTATION_STATUS_OPTIONS } from '../consult/consultTypes'
 import { clearAdminToken, getAdminToken, useAdminToken } from '../admin/adminSession'
 import { AdminListBack } from '../components/AdminListBack'
@@ -64,6 +65,7 @@ type MemberEditDraft = {
   appeal: string
   obligationAgreed: boolean
   consultationStatus: ConsultationStatus
+  adminMemo: string
   newPassword: string
 }
 
@@ -87,6 +89,7 @@ function memberToDraft(m: AdminMember): MemberEditDraft {
     appeal: m.appeal ?? '',
     obligationAgreed: m.obligationAgreed,
     consultationStatus: m.consultationStatus ?? 'none',
+    adminMemo: m.adminMemo ?? '',
     newPassword: '',
   }
 }
@@ -345,6 +348,7 @@ export function AdminMemberDetail() {
         appeal: draft.appeal,
         obligationAgreed: draft.obligationAgreed,
         consultationStatus: draft.consultationStatus,
+        adminMemo: draft.adminMemo,
       }
       if (draft.newPassword.trim()) {
         body.newPassword = draft.newPassword.trim()
@@ -845,6 +849,20 @@ export function AdminMemberDetail() {
                         />
                       </div>
                     </div>
+                    <div className="adminDetailRow adminDetailRowBlock">
+                      <div className="adminDetailDt">관리자 메모 (내부)</div>
+                      <div className="adminDetailDd">
+                        <textarea
+                          id="member-admin-memo"
+                          className="adminDetailTextarea"
+                          rows={5}
+                          value={draft.adminMemo}
+                          onChange={(e) => patchField('adminMemo', e.target.value)}
+                          maxLength={10000}
+                          placeholder="상담·매칭 메모 등 (회원에게 노출되지 않음)"
+                        />
+                      </div>
+                    </div>
                     <div className="adminDetailRow adminDetailRowBlock adminDetailPhotoBlock">
                       <div className="adminDetailDt">제출 사진</div>
                       <div className="adminDetailDd adminDetailPhotoDd">
@@ -871,7 +889,11 @@ export function AdminMemberDetail() {
                     </div>
                     <div className="adminDetailRow">
                       <div className="adminDetailDt">가입일시</div>
-                      <div className="adminDetailDd">{new Date(member.createdAt).toLocaleString('ko-KR')}</div>
+                      <div className="adminDetailDd">{formatMemberDateTime(member.createdAt)}</div>
+                    </div>
+                    <div className="adminDetailRow">
+                      <div className="adminDetailDt">최근 로그인</div>
+                      <div className="adminDetailDd">{formatMemberDateTime(member.lastLoginAt)}</div>
                     </div>
                   </div>
                 </>
@@ -961,9 +983,23 @@ export function AdminMemberDetail() {
                     <div className="adminDetailDt">회원의 의무 동의</div>
                     <div className="adminDetailDd">{member.obligationAgreed ? '동의' : '미동의'}</div>
                   </div>
+                  <div className="adminDetailRow adminDetailRowBlock">
+                    <div className="adminDetailDt">관리자 메모 (내부)</div>
+                    <div className="adminDetailDd">
+                      {member.adminMemo?.trim() ? (
+                        <p className="adminInquiryBody">{member.adminMemo}</p>
+                      ) : (
+                        <span className="adminDetailMuted">—</span>
+                      )}
+                    </div>
+                  </div>
                   <div className="adminDetailRow">
                     <div className="adminDetailDt">가입일시</div>
-                    <div className="adminDetailDd">{new Date(member.createdAt).toLocaleString('ko-KR')}</div>
+                    <div className="adminDetailDd">{formatMemberDateTime(member.createdAt)}</div>
+                  </div>
+                  <div className="adminDetailRow">
+                    <div className="adminDetailDt">최근 로그인</div>
+                    <div className="adminDetailDd">{formatMemberDateTime(member.lastLoginAt)}</div>
                   </div>
                 </div>
               )}

@@ -8,6 +8,7 @@ import multer from 'multer'
 import { hashPassword, verifyPassword } from './cryptoUtil.mjs'
 import {
   findByUserId,
+  recordMemberLogin,
   getMemberById,
   getMemberPublicById,
   insertMember,
@@ -331,6 +332,7 @@ function memberSelfDto(row) {
     appeal: row.appeal,
     obligationAgreed: row.obligationAgreed,
     createdAt: row.createdAt,
+    lastLoginAt: String(row?.lastLoginAt || '').trim() || null,
     photoCount: Array.isArray(row.photos) ? row.photos.length : 0,
     ...memberLocationFields(row),
     ...memberConsultationFields(row),
@@ -359,6 +361,7 @@ function memberAdminSummaryDto(row) {
     appeal: row.appeal,
     obligationAgreed: row.obligationAgreed,
     createdAt: row.createdAt,
+    lastLoginAt: String(row?.lastLoginAt || '').trim() || null,
     photoCount: Array.isArray(row.photos) ? row.photos.length : 0,
     hasLocation: memberLocationFields(row).hasLocation,
     locationUpdatedAt: memberLocationFields(row).locationUpdatedAt,
@@ -371,6 +374,7 @@ function memberAdminDetailDto(row) {
   return {
     ...memberSelfDto(row),
     photos: Array.isArray(row.photos) ? row.photos : [],
+    adminMemo: String(row?.adminMemo || ''),
   }
 }
 
@@ -626,8 +630,9 @@ app.post('/api/login', (req, res) => {
   if (!member || !verifyPassword(password, String(member.passwordHash || ''))) {
     return res.status(401).json({ error: '아이디 또는 비밀번호가 올바르지 않습니다.' })
   }
+  const loggedIn = recordMemberLogin(userId)
   res.json({
-    member: memberAuthDto(member),
+    member: memberAuthDto(loggedIn || member),
   })
 })
 
@@ -1030,6 +1035,10 @@ app.patch('/api/admin/members/:id', requireAdmin, (req, res) => {
     obligationAgreed,
     ...locationPatch,
     ...consultationPatch,
+  }
+
+  if (b.adminMemo !== undefined) {
+    patch.adminMemo = String(b.adminMemo).slice(0, 10000)
   }
 
   const newPw = typeof b.newPassword === 'string' ? b.newPassword.trim() : ''
