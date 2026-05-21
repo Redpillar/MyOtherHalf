@@ -54,6 +54,7 @@ import {
 } from './reviewsStore.mjs'
 import { getAdminUiSettings, setAdminUiSettings } from './adminUiSettingsStore.mjs'
 import { getLandingKpi, setLandingKpi } from './landingKpiStore.mjs'
+import { getLandingMemberStats, setLandingMemberStats } from './landingMemberStatsStore.mjs'
 import { getSiteHeaderNavConfig, setSiteHeaderNavConfig } from './siteHeaderNavStore.mjs'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const TMP_UPLOAD_DIR = join(__dirname, 'data', 'tmp_upload')
@@ -220,6 +221,24 @@ app.put('/api/admin/landing-kpi', requireAdmin, (req, res) => {
       successRate: b.successRate,
     })
     res.json({ kpi: saved })
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ error: '저장에 실패했습니다.' })
+  }
+})
+
+app.get('/api/landing-member-stats', (_req, res) => {
+  res.json({ stats: getLandingMemberStats() })
+})
+
+app.put('/api/admin/landing-member-stats', requireAdmin, (req, res) => {
+  try {
+    const b = req.body || {}
+    const saved = setLandingMemberStats({
+      maleMembers: b.maleMembers,
+      femaleMembers: b.femaleMembers,
+    })
+    res.json({ stats: saved })
   } catch (e) {
     console.error(e)
     res.status(500).json({ error: '저장에 실패했습니다.' })

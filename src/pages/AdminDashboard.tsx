@@ -12,6 +12,7 @@ const dashboardTiles: { to: string; label: string; hint: string }[] = [
   { to: '/admin/reviews', label: '커플 후기', hint: '후기 등록·공개 여부 관리' },
   { to: '/admin/recommendations', label: '랜딩 추천 문구', hint: '메인 추천 카드 문구' },
   { to: '/admin/landing-kpi', label: '메인 KPI', hint: '메인 KPI 바 수치 관리' },
+  { to: '/admin/landing-member-stats', label: '메인 회원 현황', hint: '남·여 회원 수·성비 관리' },
   { to: '/admin/menu-settings', label: '메뉴 표시 설정', hint: '관리자 상단 메뉴 구성' },
   { to: '/admin/site-header-nav', label: '헤더(메인) 메뉴', hint: '사이트 상단 링크 노출' },
 ]

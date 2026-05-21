@@ -15,6 +15,7 @@ const adminNavItems: { id: string; to: string; label: string }[] = [
   { id: 'admin-reviews', to: '/admin/reviews', label: '커플 후기' },
   { id: 'admin-recommendations', to: '/admin/recommendations', label: '랜딩 추천 문구' },
   { id: 'admin-landing-kpi', to: '/admin/landing-kpi', label: '메인 KPI' },
+  { id: 'admin-landing-member-stats', to: '/admin/landing-member-stats', label: '메인 회원 현황' },
   { id: 'admin-menu-settings', to: '/admin/menu-settings', label: '메뉴 표시 설정' },
   { id: 'admin-site-header-nav', to: '/admin/site-header-nav', label: '헤더(메인) 메뉴' },
 ]

@@ -17,6 +17,7 @@ import { AdminRecommendations } from './pages/AdminRecommendations'
 import { AdminRecommendationCreate } from './pages/AdminRecommendationCreate'
 import { AdminMemberDetail } from './pages/AdminMemberDetail'
 import { AdminLandingKpi } from './pages/AdminLandingKpi'
+import { AdminLandingMemberStats } from './pages/AdminLandingMemberStats'
 import { AdminSettings } from './pages/AdminSettings'
 import { AdminSiteHeaderNavSettings } from './pages/AdminSiteHeaderNavSettings'
 import { NoticeDetail } from './pages/NoticeDetail'
@@ -69,6 +70,7 @@ export default function App() {
         <Route path="/admin/recommendations/new" element={<AdminRecommendationCreate />} />
         <Route path="/admin/recommendations" element={<AdminRecommendations />} />
         <Route path="/admin/landing-kpi" element={<AdminLandingKpi />} />
+        <Route path="/admin/landing-member-stats" element={<AdminLandingMemberStats />} />
         <Route path="/admin/menu-settings" element={<AdminMenuSettings />} />
         <Route path="/admin/site-header-nav" element={<AdminSiteHeaderNavSettings />} />
         <Route path="/admin/settings" element={<AdminSettings />} />

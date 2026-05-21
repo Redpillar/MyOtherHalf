@@ -1,5 +1,12 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import {
+  DEFAULT_LANDING_MEMBER_STATS,
+  formatGenderRatio,
+  formatMemberCount,
+  type LandingMemberStats,
+} from '../landing/landingMemberStatsTypes'
+import { apiFetch, readJsonResponse } from '../lib/apiFetch'
 import { useMemberSession } from '../lib/memberSession'
 import './landing-post-recommend.scss'
 
@@ -205,6 +212,30 @@ const PROCESS_STEPS: {
 export function LandingPostRecommendSections() {
   const member = useMemberSession()
   const applyTo = member ? '/consult' : '/login'
+  const [memberStats, setMemberStats] = useState<LandingMemberStats>(DEFAULT_LANDING_MEMBER_STATS)
+
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      try {
+        const r = await apiFetch('/api/landing-member-stats')
+        const j = await readJsonResponse<{ stats?: LandingMemberStats }>(r)
+        if (!r.ok || !j.stats || cancelled) return
+        setMemberStats(j.stats)
+      } catch {
+        // ignore — defaults shown
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const genderRatioLabel = useMemo(
+    () => formatGenderRatio(memberStats.maleMembers, memberStats.femaleMembers),
+    [memberStats.maleMembers, memberStats.femaleMembers],
+  )
+
   return (
     <div className="pr">
       {/* 1. SERVICE 소개 */}
@@ -388,15 +419,15 @@ export function LandingPostRecommendSections() {
             <div className="prStats card">
               <div className="prStatRow">
                 <span className="prStatLabel">남성 회원</span>
-                <span className="prStatValue">35,430명</span>
+                <span className="prStatValue">{formatMemberCount(memberStats.maleMembers)}</span>
               </div>
               <div className="prStatRow">
                 <span className="prStatLabel">여성 회원</span>
-                <span className="prStatValue">33,490명</span>
+                <span className="prStatValue">{formatMemberCount(memberStats.femaleMembers)}</span>
               </div>
               <div className="prStatRow prStatRow--strong">
                 <span className="prStatLabel">전체 회원 남녀 성비</span>
-                <span className="prStatValue">5 : 5</span>
+                <span className="prStatValue">{genderRatioLabel}</span>
               </div>
             </div>
             <div className="prBigText">
